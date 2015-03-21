@@ -42,7 +42,7 @@ Request Irecv(std::vector<T>& buf, MPI_Int source, MPI_Int tag) const
 }
 
 template <typename T>
-Request Irecv(T* buf, MPI_Int count, MPI_Int source, MPI_Int tag, const MPI_Datatype& type) const
+Request Irecv(T* buf, MPI_Int count, MPI_Int source, MPI_Int tag, const Datatype& type) const
 {
     Request req;
     MPIWRAP_CALL(MPI_Irecv(buf, count, type, source, tag, comm, &req));
@@ -50,7 +50,7 @@ Request Irecv(T* buf, MPI_Int count, MPI_Int source, MPI_Int tag, const MPI_Data
 }
 
 template <typename T>
-Request Irecv(std::vector<T>& buf, MPI_Int source, MPI_Int tag, const MPI_Datatype& type) const
+Request Irecv(std::vector<T>& buf, MPI_Int source, MPI_Int tag, const Datatype& type) const
 {
     return Irecv(&buf.front(), buf.size(), source, tag, type);
 }
@@ -72,7 +72,7 @@ Request Irsend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag) const
 }
 
 template <typename T>
-Request Irsend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const MPI_Datatype& type) const
+Request Irsend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
 {
     Request req;
     MPIWRAP_CALL(MPI_Irsend(buf, count, type, dest, tag, comm, &req));
@@ -80,7 +80,7 @@ Request Irsend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const MPI
 }
 
 template <typename T>
-Request Irsend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const MPI_Datatype& type) const
+Request Irsend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const Datatype& type) const
 {
     return Irsend(&buf.front(), buf.size(), dest, tag, type);
 }
@@ -102,7 +102,7 @@ Request Isend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag) const
 }
 
 template <typename T>
-Request Isend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const MPI_Datatype& type) const
+Request Isend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
 {
     Request req;
     MPIWRAP_CALL(MPI_Isend(buf, count, type, dest, tag, comm, &req));
@@ -110,7 +110,7 @@ Request Isend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const MPI_
 }
 
 template <typename T>
-Request Isend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const MPI_Datatype& type) const
+Request Isend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const Datatype& type) const
 {
     return Isend(&buf.front(), buf.size(), dest, tag, type);
 }
@@ -132,7 +132,7 @@ Request Issend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag) const
 }
 
 template <typename T>
-Request Issend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const MPI_Datatype& type) const
+Request Issend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
 {
     Request req;
     MPIWRAP_CALL(MPI_Issend(buf, count, type, dest, tag, comm, &req));
@@ -140,7 +140,7 @@ Request Issend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const MPI
 }
 
 template <typename T>
-Request Issend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const MPI_Datatype& type) const
+Request Issend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const Datatype& type) const
 {
     return Issend(&buf.front(), buf.size(), dest, tag, type);
 }
@@ -181,7 +181,7 @@ void Recv(std::vector<T>& buf, MPI_Int source, MPI_Int tag) const
 }
 
 template <typename T>
-void Recv(T* buf, MPI_Int count, MPI_Int source, MPI_Int tag, const MPI_Datatype& type) const
+void Recv(T* buf, MPI_Int count, MPI_Int source, MPI_Int tag, const Datatype& type) const
 {
 #if MPIWRAP_VERSION_AT_LEAST(2,0)
     MPIWRAP_CALL(MPI_Recv(buf, count, type, source, tag, comm, MPI_STATUS_IGNORE));
@@ -192,7 +192,7 @@ void Recv(T* buf, MPI_Int count, MPI_Int source, MPI_Int tag, const MPI_Datatype
 }
 
 template <typename T>
-void Recv(std::vector<T>& buf, MPI_Int source, MPI_Int tag, const MPI_Datatype& type) const
+void Recv(std::vector<T>& buf, MPI_Int source, MPI_Int tag, const Datatype& type) const
 {
     Recv(&buf.front(), buf.size(), source, tag, type);
 }
@@ -210,13 +210,13 @@ void Recv(std::vector<T>& buf, MPI_Int source, MPI_Int tag, Status& status) cons
 }
 
 template <typename T>
-void Recv(T* buf, MPI_Int count, MPI_Int source, MPI_Int tag, Status& status, const MPI_Datatype& type) const
+void Recv(T* buf, MPI_Int count, MPI_Int source, MPI_Int tag, Status& status, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Recv(buf, count, type, source, tag, comm, status));
 }
 
 template <typename T>
-void Recv(std::vector<T>& buf, MPI_Int source, MPI_Int tag, Status& status, const MPI_Datatype& type) const
+void Recv(std::vector<T>& buf, MPI_Int source, MPI_Int tag, Status& status, const Datatype& type) const
 {
     Recv(&buf.front(), buf.size(), source, tag, status, type);
 }
@@ -238,7 +238,7 @@ Request Recv_init(std::vector<T>& buf, MPI_Int source, MPI_Int tag) const
 }
 
 template <typename T>
-Request Recv_init(T* buf, MPI_Int count, MPI_Int source, MPI_Int tag, const MPI_Datatype& type) const
+Request Recv_init(T* buf, MPI_Int count, MPI_Int source, MPI_Int tag, const Datatype& type) const
 {
     Request req;
     MPIWRAP_CALL(MPI_Recv_init(buf, count, type, source, tag, comm, &req));
@@ -246,7 +246,7 @@ Request Recv_init(T* buf, MPI_Int count, MPI_Int source, MPI_Int tag, const MPI_
 }
 
 template <typename T>
-Request Recv_init(std::vector<T>& buf, MPI_Int source, MPI_Int tag, const MPI_Datatype& type) const
+Request Recv_init(std::vector<T>& buf, MPI_Int source, MPI_Int tag, const Datatype& type) const
 {
     return Recv_init(&buf.front(), buf.size(), source, tag, type);
 }
@@ -268,13 +268,13 @@ void Rsend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag) const
 }
 
 template <typename T>
-void Rsend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const MPI_Datatype& type) const
+void Rsend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Rsend(buf, count, type, dest, tag, comm));
 }
 
 template <typename T>
-void Rsend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const MPI_Datatype& type) const
+void Rsend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const Datatype& type) const
 {
     Rsend(&buf.front(), buf.size(), dest, tag, type);
 }
@@ -296,7 +296,7 @@ Request Rsend_init(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag) const
 }
 
 template <typename T>
-Request Rsend_init(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const MPI_Datatype& type) const
+Request Rsend_init(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
 {
     Request req;
     MPIWRAP_CALL(MPI_Rsend_init(buf, count, type, dest, tag, comm, &req));
@@ -304,7 +304,7 @@ Request Rsend_init(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const
 }
 
 template <typename T>
-Request Rsend_init(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const MPI_Datatype& type) const
+Request Rsend_init(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const Datatype& type) const
 {
     return Rsend_init(&buf.front(), buf.size(), dest, tag, type);
 }
@@ -326,13 +326,13 @@ void Send(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag) const
 }
 
 template <typename T>
-void Send(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const MPI_Datatype& type) const
+void Send(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Send(buf, count, type, dest, tag, comm));
 }
 
 template <typename T>
-void Send(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const MPI_Datatype& type) const
+void Send(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const Datatype& type) const
 {
     Send(&buf.front(), buf.size(), dest, tag, type);
 }
@@ -354,7 +354,7 @@ Request Send_init(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag) const
 }
 
 template <typename T>
-Request Send_init(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const MPI_Datatype& type) const
+Request Send_init(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
 {
     Request req;
     MPIWRAP_CALL(MPI_Send_init(buf, count, type, dest, tag, comm, &req));
@@ -362,7 +362,7 @@ Request Send_init(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const 
 }
 
 template <typename T>
-Request Send_init(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const MPI_Datatype& type) const
+Request Send_init(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const Datatype& type) const
 {
     return Send_init(&buf.front(), buf.size(), dest, tag, type);
 }
@@ -390,7 +390,7 @@ void Sendrecv(const std::vector<T>& sendbuf, MPI_Int dest,
 template <typename T>
 void Sendrecv(const T* sendbuf, MPI_Int sendcount, MPI_Int dest,
                     T* recvbuf, MPI_Int recvcount, MPI_Int source, MPI_Int tag,
-              const MPI_Datatype& type) const
+              const Datatype& type) const
 {
 #if MPIWRAP_VERSION_AT_LEAST(2,0)
     MPIWRAP_CALL(MPI_Sendrecv(sendbuf, sendcount, type,   dest, tag,
@@ -405,7 +405,7 @@ void Sendrecv(const T* sendbuf, MPI_Int sendcount, MPI_Int dest,
 template <typename T>
 void Sendrecv(const std::vector<T>& sendbuf, MPI_Int dest,
                     std::vector<T>& recvbuf, MPI_Int source, MPI_Int tag,
-              const MPI_Datatype& type) const
+              const Datatype& type) const
 {
     Sendrecv(&sendbuf.front(), sendbuf.size(), dest,
              &recvbuf.front(), recvbuf.size(), source, tag, type);
@@ -430,7 +430,7 @@ void Sendrecv(const std::vector<T>& sendbuf, MPI_Int dest,
 template <typename T>
 void Sendrecv(const T* sendbuf, MPI_Int sendcount, MPI_Int dest,
                     T* recvbuf, MPI_Int recvcount, MPI_Int source, MPI_Int tag, Status& status,
-              const MPI_Datatype& type) const
+              const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Sendrecv(sendbuf, sendcount, type,   dest, tag,
                               recvbuf, recvcount, type, source, tag, comm, status));
@@ -439,7 +439,7 @@ void Sendrecv(const T* sendbuf, MPI_Int sendcount, MPI_Int dest,
 template <typename T>
 void Sendrecv(const std::vector<T>& sendbuf, MPI_Int dest,
                     std::vector<T>& recvbuf, MPI_Int source, MPI_Int tag, Status& status,
-              const MPI_Datatype& type) const
+              const Datatype& type) const
 {
     Sendrecv(&sendbuf.front(), sendbuf.size(), dest,
              &recvbuf.front(), recvbuf.size(), source, tag, status, type);
@@ -462,7 +462,7 @@ void Sendrecv(std::vector<T>& buf, MPI_Int dest, MPI_Int source, MPI_Int tag) co
 }
 
 template <typename T>
-void Sendrecv(T* buf, MPI_Int count, MPI_Int dest, MPI_Int source, MPI_Int tag, const MPI_Datatype& type) const
+void Sendrecv(T* buf, MPI_Int count, MPI_Int dest, MPI_Int source, MPI_Int tag, const Datatype& type) const
 {
 #if MPIWRAP_VERSION_AT_LEAST(2,0)
     MPIWRAP_CALL(MPI_Sendrecv_replace(buf, count, type, dest, tag, source, tag, comm, MPI_STATUS_IGNORE));
@@ -473,7 +473,7 @@ void Sendrecv(T* buf, MPI_Int count, MPI_Int dest, MPI_Int source, MPI_Int tag, 
 }
 
 template <typename T>
-void Sendrecv(std::vector<T>& buf, MPI_Int dest, MPI_Int source, MPI_Int tag, const MPI_Datatype& type) const
+void Sendrecv(std::vector<T>& buf, MPI_Int dest, MPI_Int source, MPI_Int tag, const Datatype& type) const
 {
     Sendrecv(&buf.front(), buf.size(), dest, source, tag, type);
 }
@@ -492,14 +492,14 @@ void Sendrecv(std::vector<T>& buf, MPI_Int dest, MPI_Int source, MPI_Int tag, St
 
 template <typename T>
 void Sendrecv(T* buf, MPI_Int count, MPI_Int dest, MPI_Int source, MPI_Int tag, Status& status,
-              const MPI_Datatype& type) const
+              const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Sendrecv_replace(buf, count, type, dest, tag, source, tag, comm, status));
 }
 
 template <typename T>
 void Sendrecv(std::vector<T>& buf, MPI_Int dest, MPI_Int source, MPI_Int tag, Status& status,
-              const MPI_Datatype& type) const
+              const Datatype& type) const
 {
     Sendrecv(&buf.front(), buf.size(), dest, source, tag, status, type);
 }
@@ -521,13 +521,13 @@ void Ssend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag) const
 }
 
 template <typename T>
-void Ssend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const MPI_Datatype& type) const
+void Ssend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Ssend(buf, count, type, dest, tag, comm));
 }
 
 template <typename T>
-void Ssend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const MPI_Datatype& type) const
+void Ssend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const Datatype& type) const
 {
     Ssend(&buf.front(). buf.size(), dest, tag, type);
 }
@@ -549,7 +549,7 @@ Request Ssend_init(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag) const
 }
 
 template <typename T>
-Request Ssend_init(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const MPI_Datatype& type) const
+Request Ssend_init(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
 {
     Request req;
     MPIWRAP_CALL(MPI_Ssend_init(buf, count, type, dest, tag, comm, &req));
@@ -557,7 +557,7 @@ Request Ssend_init(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const
 }
 
 template <typename T>
-Request Ssend_init(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const MPI_Datatype& type) const
+Request Ssend_init(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const Datatype& type) const
 {
     return Ssend_init(&buf.front(), buf.size(), dest, tag, type);
 }

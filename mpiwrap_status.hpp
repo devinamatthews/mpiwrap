@@ -14,7 +14,7 @@ class Status
     protected:
         MPI_Status status;
 
-        Status(const MPI_Status& status) : status(status) {}
+        explicit Status(const MPI_Status& status) : status(status) {}
 
     public:
         operator MPI_Status&() { return status; }
@@ -44,14 +44,14 @@ class Status
         MPI_Int count(const MPI_Datatype& type) const
         {
             MPI_Int n;
-            MPIWRAP_CALL(MPI_Get_count(&status, type, &n));
+            MPIWRAP_CALL(MPI_Get_count(nconst(&status), type, &n));
             return n;
         }
 
         bool cancelled() const
         {
             MPI_Int flag;
-            MPIWRAP_CALL(MPI_Test_cancelled(&status, &flag));
+            MPIWRAP_CALL(MPI_Test_cancelled(nconst(&status), &flag));
             return flag;
         }
 };

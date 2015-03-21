@@ -39,7 +39,7 @@ class Group
         Group()
         : group(MPI_GROUP_NULL), rank(0), size(0) {}
 
-        Group(const MPI_Group& group)
+        explicit Group(const MPI_Group& group)
         : group(group), rank(getRank(group)), size(getSize(group)) {}
 
         operator MPI_Group&() { return group; }
@@ -53,7 +53,7 @@ class Group
         std::vector<MPI_Int> translateRanks(const MPI_Int* ranks, MPI_Int count, const Group& other) const
         {
             std::vector<MPI_Int> other_ranks(count);
-            MPIWRAP_CALL(MPI_Group_translate_ranks(group, count, ranks, other, &other_ranks.front()));
+            MPIWRAP_CALL(MPI_Group_translate_ranks(group, count, nconst(ranks), other, &other_ranks.front()));
             return other_ranks;
         }
 
@@ -88,7 +88,7 @@ class Group
         Group including(const MPI_Int* ranks, MPI_Int count)
         {
             Group g;
-            MPIWRAP_CALL(MPI_Group_incl(group, count, ranks, g));
+            MPIWRAP_CALL(MPI_Group_incl(group, count, nconst(ranks), g));
             return g;
         }
 
@@ -100,7 +100,7 @@ class Group
         Group excluding(const MPI_Int* ranks, MPI_Int count)
         {
             Group g;
-            MPIWRAP_CALL(MPI_Group_excl(group, count, ranks, g));
+            MPIWRAP_CALL(MPI_Group_excl(group, count, nconst(ranks), g));
             return g;
         }
 
@@ -112,7 +112,7 @@ class Group
         Group including(const Range* ranges, MPI_Int count)
         {
             Group g;
-            MPIWRAP_CALL(MPI_Group_incl(group, count, reinterpret_cast<MPI_Int*>(ranges), g));
+            MPIWRAP_CALL(MPI_Group_incl(group, count, reinterpret_cast<MPI_Int*>(nconst(ranges)), g));
             return g;
         }
 
@@ -124,7 +124,7 @@ class Group
         Group excluding(const Range* ranges, MPI_Int count)
         {
             Group g;
-            MPIWRAP_CALL(MPI_Group_excl(group, count, reinterpret_cast<MPI_Int*>(ranges), g));
+            MPIWRAP_CALL(MPI_Group_excl(group, count, reinterpret_cast<MPI_Int*>(nconst(ranges)), g));
             return g;
         }
 

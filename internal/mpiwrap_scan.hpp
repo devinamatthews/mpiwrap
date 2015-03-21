@@ -21,13 +21,13 @@ void Exscan(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op
 }
 
 template <typename T>
-void Exscan(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op, const MPI_Datatype& type) const
+void Exscan(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Exscan(sendbuf, recvbuf, count, type, op, comm));
 }
 
 template <typename T>
-void Exscan(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op, const MPI_Datatype& type) const
+void Exscan(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op, const Datatype& type) const
 {
     MPIWRAP_ASSERT(sendbuf.size() == recvbuf.size(),
                    "Send and receive buffers must be the same size.");
@@ -53,13 +53,13 @@ void Scan(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& 
 }
 
 template <typename T>
-void Scan(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op, const MPI_Datatype& type) const
+void Scan(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Scan(sendbuf, recvbuf, count, type, op, comm));
 }
 
 template <typename T>
-void Scan(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op, const MPI_Datatype& type) const
+void Scan(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op, const Datatype& type) const
 {
     MPIWRAP_ASSERT(sendbuf.size() == recvbuf.size(),
                    "Send and receive buffers must be the same size.");

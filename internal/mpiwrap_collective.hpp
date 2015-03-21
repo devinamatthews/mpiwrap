@@ -19,13 +19,13 @@ void Allgather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf) const
 }
 
 template <typename T>
-void Allgather(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Datatype& type) const
+void Allgather(const T* sendbuf, T* recvbuf, MPI_Int count, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Allgather(sendbuf, count, type, recvbuf, count, type, comm));
 }
 
 template <typename T>
-void Allgather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Datatype& type) const
+void Allgather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const Datatype& type) const
 {
     MPIWRAP_ASSERT(sendbuf.size() == recvbuf.size(),
                    "Send and receive buffers must be the same size.");
@@ -51,7 +51,7 @@ void Allgather(std::vector<T>& recvbuf) const
 }
 
 template <typename T>
-void Allgather(T* recvbuf, MPI_Int count, const MPI_Datatype& type) const
+void Allgather(T* recvbuf, MPI_Int count, const Datatype& type) const
 {
 #if MPIWRAP_VERSION_AT_LEAST(2,0)
     MPIWRAP_CALL(MPI_Allgather(MPI_IN_PLACE, 0, type, recvbuf, count, type, comm));
@@ -63,7 +63,7 @@ void Allgather(T* recvbuf, MPI_Int count, const MPI_Datatype& type) const
 }
 
 template <typename T>
-void Allgather(std::vector<T>& recvbuf, const MPI_Datatype& type) const
+void Allgather(std::vector<T>& recvbuf, const Datatype& type) const
 {
     MPIWRAP_ASSERT(recvbuf.size()%size == 0,
                    "Receive buffer size must be a multiple of the communicator size.");
@@ -91,7 +91,7 @@ void Allgather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf,
 
 template <typename T>
 void Allgather(const T* sendbuf, MPI_Int sendcount, T* recvbuf, const MPI_Int* recvcounts,
-               const MPI_Datatype& type) const
+               const Datatype& type) const
 {
     std::vector<MPI_Int> displs = displacements(recvcounts);
     Allgather(sendbuf, sendcount, recvbuf, recvcounts, recvdispls, type);
@@ -99,7 +99,7 @@ void Allgather(const T* sendbuf, MPI_Int sendcount, T* recvbuf, const MPI_Int* r
 
 template <typename T>
 void Allgather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts,
-               const MPI_Datatype& type) const
+               const Datatype& type) const
 {
     MPIWRAP_ASSERT(recvbuf.size() == sum(recvcounts),
                    "The receive buffer size must equal the sum of the receive counts.");
@@ -121,14 +121,14 @@ void Allgather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf,
 
 template <typename T>
 void Allgather(const T* sendbuf, MPI_Int sendcount, T* recvbuf, const MPI_Int* recvcounts,
-               const MPI_Int* recvdispls, const MPI_Datatype& type) const
+               const MPI_Int* recvdispls, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Allgatherv(sendbuf, sendcount, type, recvbuf, recvcounts, recvdispls, type, comm));
 }
 
 template <typename T>
 void Allgather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts,
-               const std::vector<MPI_Int>& recvdispls, const MPI_Datatype& type) const
+               const std::vector<MPI_Int>& recvdispls, const Datatype& type) const
 {
     MPIWRAP_ASSERT(recvcounts.size() == size,
                    "There must be exactly one receive count for each process.");
@@ -158,14 +158,14 @@ void Allgather(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts) 
 }
 
 template <typename T>
-void Allgather(T* recvbuf, const MPI_Int* recvcounts, const MPI_Datatype& type) const
+void Allgather(T* recvbuf, const MPI_Int* recvcounts, const Datatype& type) const
 {
     std::vector<MPI_Int> displs = displacements(recvcounts);
     Allgather(recvbuf, recvcounts, displs, type);
 }
 
 template <typename T>
-void Allgather(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, const MPI_Datatype& type) const
+void Allgather(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, const Datatype& type) const
 {
     MPIWRAP_ASSERT(recvbuf.size() == sum(recvcounts),
                    "The receive buffer size must equal the sum of the receive counts.");
@@ -185,7 +185,7 @@ void Allgather(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, 
 }
 
 template <typename T>
-void Allgather(T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls, const MPI_Datatype& type) const
+void Allgather(T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls, const Datatype& type) const
 {
 #if MPIWRAP_VERSION_AT_LEAST(2,0)
     MPIWRAP_CALL(MPI_Allgatherv(MPI_IN_PLACE, 0, type, recvbuf, recvcounts, recvdispls, type, comm));
@@ -197,7 +197,7 @@ void Allgather(T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls,
 }
 
 template <typename T>
-void Allgather(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, const std::vector<MPI_Int>& recvdispls, const MPI_Datatype& type) const
+void Allgather(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, const std::vector<MPI_Int>& recvdispls, const Datatype& type) const
 {
     MPIWRAP_ASSERT(recvcounts.size() == size,
                    "There must be exactly one receive count for each process.");
@@ -227,14 +227,14 @@ void Allreduce(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI
 }
 
 template <typename T>
-void Allreduce(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op, const MPI_Datatype& type) const
+void Allreduce(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Allreduce(sendbuf, recvbuf, count, type, op, comm));
 }
 
 template <typename T>
 void Allreduce(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op,
-               const MPI_Datatype& type) const
+               const Datatype& type) const
 {
     MPIWRAP_ASSERT(sendbuf.size() == recvbuf.size(),
                    "Send and receive buffers must be the same size.");
@@ -260,7 +260,7 @@ void Allreduce(std::vector<T>& buf, const MPI_Op& op) const
 }
 
 template <typename T>
-void Allreduce(T* buf, MPI_Int count, const MPI_Op& op, const MPI_Datatype& type) const
+void Allreduce(T* buf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
 {
 #if MPIWRAP_VERSION_AT_LEAST(2,0)
     MPIWRAP_CALL(MPI_Allreduce(MPI_IN_PLACE, buf, count, type, op, comm));
@@ -272,7 +272,7 @@ void Allreduce(T* buf, MPI_Int count, const MPI_Op& op, const MPI_Datatype& type
 }
 
 template <typename T>
-void Allreduce(std::vector<T>& buf, const MPI_Op& op, const MPI_Datatype& type) const
+void Allreduce(std::vector<T>& buf, const MPI_Op& op, const Datatype& type) const
 {
     Allreduce(&buf.front(), buf.size(), op, type));
 }
@@ -296,13 +296,13 @@ void Alltoall(const std::vector<T>& sendbuf, std::vector<T>& recvbuf) const
 }
 
 template <typename T>
-void Alltoall(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Datatype& type) const
+void Alltoall(const T* sendbuf, T* recvbuf, MPI_Int count, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Alltoall(sendbuf, count, type, recvbuf, count, type, comm));
 }
 
 template <typename T>
-void Alltoall(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Datatype& type) const
+void Alltoall(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const Datatype& type) const
 {
     MPIWRAP_ASSERT(sendbuf.size() == recvbuf.size(),
                    "Send and receive buffers must be the same size.");
@@ -330,7 +330,7 @@ void Alltoall(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcou
 
 template <typename T>
 void Alltoall(const T* sendbuf, const MPI_Int* sendcounts,
-                    T* recvbuf, const MPI_Int* recvcounts, const MPI_Datatype& type) const
+                    T* recvbuf, const MPI_Int* recvcounts, const Datatype& type) const
 {
     std::vector<MPI_Int> senddispls = displacements(sendcounts);
     std::vector<MPI_Int> recvdispls = displacements(recvcounts);
@@ -341,7 +341,7 @@ void Alltoall(const T* sendbuf, const MPI_Int* sendcounts,
 template <typename T>
 void Alltoall(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcounts,
                     std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts,
-              const MPI_Datatype& type) const
+              const Datatype& type) const
 {
     MPIWRAP_ASSERT(sendbuf.size() == sum(sendcounts),
                    "The send buffer size must equal the sum of the send counts.");
@@ -369,7 +369,7 @@ void Alltoall(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcou
 
 template <typename T>
 void Alltoall(const T* sendbuf, const MPI_Int* sendcounts, const MPI_Int* senddispls,
-                    T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls, const MPI_Datatype& type) const
+                    T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Alltoallv(sendbuf, sendcounts, senddispls, type,
                                recvbuf, recvcounts, recvdispls, type, comm));
@@ -378,7 +378,7 @@ void Alltoall(const T* sendbuf, const MPI_Int* sendcounts, const MPI_Int* senddi
 template <typename T>
 void Alltoall(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcounts, const std::vector<MPI_Int>& senddispls,
                     std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, const std::vector<MPI_Int>& recvdispls,
-              const MPI_Datatype& type) const
+              const Datatype& type) const
 {
     MPIWRAP_ASSERT(sendcounts.size() == size,
                    "There must be exactly one send count for each process.");
@@ -422,13 +422,13 @@ void Bcast(std::vector<T>& buffer, MPI_Int root) const
 }
 
 template <typename T>
-void Bcast(T* buffer, MPI_Int count, MPI_Int root, const MPI_Datatype& type) const
+void Bcast(T* buffer, MPI_Int count, MPI_Int root, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Bcast(buffer, count, type, root, comm));
 }
 
 template <typename T>
-void Bcast(std::vector<T>& buffer, MPI_Int root, const MPI_Datatype& type) const
+void Bcast(std::vector<T>& buffer, MPI_Int root, const Datatype& type) const
 {
     Bcast(&buffer.front(), buffer.size(), root, type);
 }
@@ -452,13 +452,13 @@ void Gather(const std::vector<T>& sendbuf, MPI_Int root) const
 }
 
 template <typename T>
-void Gather(const T* sendbuf, MPI_Int count, MPI_Int root, const MPI_Datatype& type) const
+void Gather(const T* sendbuf, MPI_Int count, MPI_Int root, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Gather(sendbuf, count, type, NULL, 0, type, root, comm));
 }
 
 template <typename T>
-void Gather(const std::vector<T>& sendbuf, MPI_Int root, const MPI_Datatype& type) const
+void Gather(const std::vector<T>& sendbuf, MPI_Int root, const Datatype& type) const
 {
     Gather(&sendbuf.front(), sendbuf.size(), root, type);
 }
@@ -480,13 +480,13 @@ void Gather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf) const
 }
 
 template <typename T>
-void Gather(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Datatype& type) const
+void Gather(const T* sendbuf, T* recvbuf, MPI_Int count, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Gather(sendbuf, count, type, recvbuf, count, type, rank, comm));
 }
 
 template <typename T>
-void Gather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Datatype& type) const
+void Gather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const Datatype& type) const
 {
     MPIWRAP_ASSERT(size*sendbuf.size() == recvbuf.size(),
                    "Receive buffers size must be equal communicator size times send buffer size.");
@@ -510,7 +510,7 @@ void Gather(std::vector<T>& recvbuf) const
 }
 
 template <typename T>
-void Gather(T* recvbuf, MPI_Int count, const MPI_Datatype& type) const
+void Gather(T* recvbuf, MPI_Int count, const Datatype& type) const
 {
 #if MPIWRAP_VERSION_AT_LEAST(2,0)
     MPIWRAP_CALL(MPI_Gather(MPI_IN_PLACE, 0, type, recvbuf, count, type, rank, comm));
@@ -522,7 +522,7 @@ void Gather(T* recvbuf, MPI_Int count, const MPI_Datatype& type) const
 }
 
 template <typename T>
-void Gather(std::vector<T>& recvbuf, const MPI_Datatype& type) const
+void Gather(std::vector<T>& recvbuf, const Datatype& type) const
 {
     MPIWRAP_ASSERT(recvbuf.size()%size == 0,
                    "Receive buffer size must be a multiple of the communicator size.");
@@ -558,13 +558,13 @@ void Gather(std::vector<T>& recvbuf) const
 }
 
 template <typename T>
-void Gather(T* recvbuf, MPI_Int count, const MPI_Datatype& type) const
+void Gather(T* recvbuf, MPI_Int count, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Gather(NULL, 0, type, recvbuf, count, type, MPI_ROOT, comm));
 }
 
 template <typename T>
-void Gather(std::vector<T>& recvbuf, const MPI_Datatype& type) const
+void Gather(std::vector<T>& recvbuf, const Datatype& type) const
 {
     MPIWRAP_ASSERT(recvbuf.size()%remoteSize == 0,
                    "Receive buffer size must be a multiple of the remote communicator size.");
@@ -588,13 +588,13 @@ void Gather(const std::vector<T>& sendbuf, MPI_Int root) const
 }
 
 template <typename T>
-void Gather(const T* sendbuf, MPI_Int count, MPI_Int root, const MPI_Datatype& type) const
+void Gather(const T* sendbuf, MPI_Int count, MPI_Int root, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Gather(sendbuf, count, type, NULL, 0, type, root, comm));
 }
 
 template <typename T>
-void Gather(const std::vector<T>& sendbuf, MPI_Int root, const MPI_Datatype& type) const
+void Gather(const std::vector<T>& sendbuf, MPI_Int root, const Datatype& type) const
 {
     Gather(&sendbuf.front(), sendbuf.size(), root, type);
 }
@@ -620,13 +620,13 @@ void Gatherv(const std::vector<T>& sendbuf, MPI_Int root) const
 }
 
 template <typename T>
-void Gatherv(const T* sendbuf, MPI_Int sendcount, MPI_Int root, const MPI_Datatype& type) const
+void Gatherv(const T* sendbuf, MPI_Int sendcount, MPI_Int root, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Gatherv(sendbuf, sendcount, type, NULL, NULL, NULL, type, root, comm));
 }
 
 template <typename T>
-void Gatherv(const std::vector<T>& sendbuf, MPI_Int root, const MPI_Datatype& type) const
+void Gatherv(const std::vector<T>& sendbuf, MPI_Int root, const Datatype& type) const
 {
     Gatherv(&sendbuf.front(), sendbuf.size(), root, type);
 }
@@ -650,7 +650,7 @@ void Gather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf,
 
 template <typename T>
 void Gather(const T* sendbuf, MPI_Int sendcount, T* recvbuf, const MPI_Int* recvcounts,
-             const MPI_Datatype& type) const
+             const Datatype& type) const
 {
     std::vector<MPI_Int> recvdispls = displacements(recvcounts);
     Gather(sendbuf, recvbuf, recvcounts, &recvdispls.front(), type);
@@ -658,7 +658,7 @@ void Gather(const T* sendbuf, MPI_Int sendcount, T* recvbuf, const MPI_Int* recv
 
 template <typename T>
 void Gather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts,
-            const MPI_Datatype& type) const
+            const Datatype& type) const
 {
     MPIWRAP_ASSERT(recvbuf.size() == sum(recvcounts),
                    "The receive buffer size must equal the sum of the receive counts.");
@@ -680,14 +680,14 @@ void Gather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf,
 
 template <typename T>
 void Gather(const T* sendbuf, MPI_Int sendcount, T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls,
-             const MPI_Datatype& type) const
+             const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Gatherv(sendbuf, sendcount, type, recvbuf, recvcounts, recvdispls, type, rank, comm));
 }
 
 template <typename T>
 void Gather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts,
-            const std::vector<MPI_Int>& recvdispls, const MPI_Datatype& type) const
+            const std::vector<MPI_Int>& recvdispls, const Datatype& type) const
 {
     MPIWRAP_ASSERT(recvcounts.size() == size,
                    "There must be exactly one receive count for each process.");
@@ -717,14 +717,14 @@ void Gather(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts) con
 }
 
 template <typename T>
-void Gather(T* recvbuf, const MPI_Int* recvcounts, const MPI_Datatype& type) const
+void Gather(T* recvbuf, const MPI_Int* recvcounts, const Datatype& type) const
 {
     std::vector<MPI_Int> recvdispls = displacements(recvcounts);
     Gather(recvbuf, recvcounts, recvdispls, type);
 }
 
 template <typename T>
-void Gather(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, const MPI_Datatype& type) const
+void Gather(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, const Datatype& type) const
 {
     MPIWRAP_ASSERT(recvbuf.size() == sum(recvcounts),
                    "The receive buffer size must equal the sum of the receive counts.");
@@ -744,7 +744,7 @@ void Gather(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, con
 }
 
 template <typename T>
-void Gather(T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls, const MPI_Datatype& type) const
+void Gather(T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls, const Datatype& type) const
 {
 #if MPIWRAP_VERSION_AT_LEAST(2,0)
     MPIWRAP_CALL(MPI_Gatherv(MPI_IN_PLACE, 0, type, recvbuf, recvcounts, recvdispls, type, rank, comm));
@@ -756,7 +756,7 @@ void Gather(T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls, co
 }
 
 template <typename T>
-void Gather(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, const std::vector<MPI_Int>& recvdispls, const MPI_Datatype& type) const
+void Gather(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, const std::vector<MPI_Int>& recvdispls, const Datatype& type) const
 {
     MPIWRAP_ASSERT(recvcounts.size() == size,
                    "There must be exactly one receive count for each process.");
@@ -790,13 +790,13 @@ void Reduce(const std::vector<T>& sendbuf, const MPI_Op& op, MPI_Int root) const
 }
 
 template <typename T>
-void Reduce(const T* sendbuf, MPI_Int count, const MPI_Op& op, MPI_Int root, const MPI_Datatype& type) const
+void Reduce(const T* sendbuf, MPI_Int count, const MPI_Op& op, MPI_Int root, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Reduce(sendbuf, NULL, count, type, op, root, comm));
 }
 
 template <typename T>
-void Reduce(const std::vector<T>& sendbuf, const MPI_Op& op, MPI_Int root, const MPI_Datatype& type) const
+void Reduce(const std::vector<T>& sendbuf, const MPI_Op& op, MPI_Int root, const Datatype& type) const
 {
     Reduce(&sendbuf.front(), sendbuf.size(), op, root, type);
 }
@@ -818,13 +818,13 @@ void Reduce(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op
 }
 
 template <typename T>
-void Reduce(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op, const MPI_Datatype& type) const
+void Reduce(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Reduce(sendbuf, recvbuf, count, type, op, rank, comm));
 }
 
 template <typename T>
-void Reduce(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op, const MPI_Datatype& type) const
+void Reduce(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op, const Datatype& type) const
 {
     MPIWRAP_ASSERT(sendbuf.size() == recvbuf.size(),
                    "Send and receive buffers must be the same size.");
@@ -848,7 +848,7 @@ void Reduce(std::vector<T>& recvbuf, const MPI_Op& op) const
 }
 
 template <typename T>
-void Reduce(T* recvbuf, MPI_Int count, const MPI_Op& op, const MPI_Datatype& type) const
+void Reduce(T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
 {
 #if MPIWRAP_VERSION_AT_LEAST(2,0)
     MPIWRAP_CALL(MPI_Reduce(MPI_IN_PLACE, recvbuf, count, type, op, rank, comm));
@@ -860,7 +860,7 @@ void Reduce(T* recvbuf, MPI_Int count, const MPI_Op& op, const MPI_Datatype& typ
 }
 
 template <typename T>
-void Reduce(std::vector<T>& recvbuf, const MPI_Op& op, const MPI_Datatype& type) const
+void Reduce(std::vector<T>& recvbuf, const MPI_Op& op, const Datatype& type) const
 {
     Reduce(&recvbuf.front(), recvbuf.size(), op, type);
 }
@@ -887,14 +887,14 @@ void Reduce_scatter(const std::vector<T>& sendbuf, std::vector<T>& recvbuf,
 }
 
 template <typename T>
-void Reduce_scatter(const T* sendbuf, T* recvbuf, MPI_Int* recvcounts, const MPI_Op& op, const MPI_Datatype& type) const
+void Reduce_scatter(const T* sendbuf, T* recvbuf, MPI_Int* recvcounts, const MPI_Op& op, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Reduce_scatter(sendbuf, recvbuf, recvcounts, type, op, comm));
 }
 
 template <typename T>
 void Reduce_scatter(const std::vector<T>& sendbuf, std::vector<T>& recvbuf,
-                    std::vector<MPI_Int>& recvcounts, const MPI_Op& op, const MPI_Datatype& type) const
+                    std::vector<MPI_Int>& recvcounts, const MPI_Op& op, const Datatype& type) const
 {
     MPIWRAP_ASSERT(recvcounts.size() == size,
                    "There must be exactly one receive count for each process.");
@@ -924,7 +924,7 @@ void Reduce_scatter(std::vector<T>& recvbuf, std::vector<MPI_Int>& recvcounts, c
 }
 
 template <typename T>
-void Reduce_scatter(T* recvbuf, MPI_Int* recvcounts, const MPI_Op& op, const MPI_Datatype& type) const
+void Reduce_scatter(T* recvbuf, MPI_Int* recvcounts, const MPI_Op& op, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Reduce_scatter(MPI_IN_PLACE, recvbuf, recvcounts, type, op, comm));
 #if MPIWRAP_VERSION_AT_LEAST(2,0)
@@ -934,7 +934,7 @@ void Reduce_scatter(T* recvbuf, MPI_Int* recvcounts, const MPI_Op& op, const MPI
 }
 
 template <typename T>
-void Reduce_scatter(std::vector<T>& recvbuf, std::vector<MPI_Int>& recvcounts, const MPI_Op& op, const MPI_Datatype& type) const
+void Reduce_scatter(std::vector<T>& recvbuf, std::vector<MPI_Int>& recvcounts, const MPI_Op& op, const Datatype& type) const
 {
     MPIWRAP_ASSERT(recvcounts.size() == size,
                    "There must be exactly one receive count for each process.");
@@ -964,13 +964,13 @@ void Scatter(std::vector<T>& recvbuf, MPI_Int root) const
 }
 
 template <typename T>
-void Scatter(T* recvbuf, MPI_Int recvcount, MPI_Int root, const MPI_Datatype& type) const
+void Scatter(T* recvbuf, MPI_Int recvcount, MPI_Int root, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Scatter(NULL, 0, type, recvbuf, recvcount, type, root, comm));
 }
 
 template <typename T>
-void Scatter(std::vector<T>& recvbuf, MPI_Int root, const MPI_Datatype& type) const
+void Scatter(std::vector<T>& recvbuf, MPI_Int root, const Datatype& type) const
 {
     Scatter(&recvbuf.front(), recvbuf.size(), root, type);
 }
@@ -992,13 +992,13 @@ void Scatter(const std::vector<T>& sendbuf, std::vector<T>& recvbuf) const
 }
 
 template <typename T>
-void Scatter(const T* sendbuf, T* recvbuf, MPI_Int recvcount, const MPI_Datatype& type) const
+void Scatter(const T* sendbuf, T* recvbuf, MPI_Int recvcount, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Scatter(sendbuf, recvcount, type, recvbuf, recvcount, type, rank, comm));
 }
 
 template <typename T>
-void Scatter(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Datatype& type) const
+void Scatter(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const Datatype& type) const
 {
     MPIWRAP_ASSERT(size*recvbuf.size() == sendbuf.size(),
                    "Send buffer size must be equal communicator size times send receive size.");
@@ -1022,7 +1022,7 @@ void Scatter(const std::vector<T>& sendbuf) const
 }
 
 template <typename T>
-void Scatter(const T* sendbuf, MPI_Int count, const MPI_Datatype& type) const
+void Scatter(const T* sendbuf, MPI_Int count, const Datatype& type) const
 {
 #if MPIWRAP_VERSION_AT_LEAST(2,0)
     MPIWRAP_CALL(MPI_Scatter(sendbuf, count, type, MPI_IN_PLACE, 0, type, rank, comm));
@@ -1034,7 +1034,7 @@ void Scatter(const T* sendbuf, MPI_Int count, const MPI_Datatype& type) const
 }
 
 template <typename T>
-void Scatter(const std::vector<T>& sendbuf, const MPI_Datatype& type) const
+void Scatter(const std::vector<T>& sendbuf, const Datatype& type) const
 {
     MPIWRAP_ASSERT(sendbuf.size()%size == 0,
                    "Send buffer size must be a multiple of the communicator size.");
@@ -1064,13 +1064,13 @@ void Scatterv(std::vector<T>& recvbuf, MPI_Int root) const
 }
 
 template <typename T>
-void Scatterv(T* recvbuf, MPI_Int recvcount, MPI_Int root, const MPI_Datatype& type) const
+void Scatterv(T* recvbuf, MPI_Int recvcount, MPI_Int root, const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Scatterv(NULL, NULL, NULL, type, recvbuf, recvcount, type, root, comm));
 }
 
 template <typename T>
-void Scatterv(std::vector<T>& recvbuf, MPI_Int root, const MPI_Datatype& type) const
+void Scatterv(std::vector<T>& recvbuf, MPI_Int root, const Datatype& type) const
 {
     Scatterv(&recvbuf.front(), recvbuf.size(), root, type);
 }
@@ -1094,7 +1094,7 @@ void Scatter(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcoun
 
 template <typename T>
 void Scatter(const T* sendbuf, const MPI_Int* sendcounts, T* recvbuf, MPI_Int recvcount,
-              const MPI_Datatype& type) const
+              const Datatype& type) const
 {
     std::vector<MPI_Int> senddispls = displacements(sendcounts);
     Scatter(sendbuf, sendcounts, &senddispls.front(), recvbuf, recvcount, type);
@@ -1102,7 +1102,7 @@ void Scatter(const T* sendbuf, const MPI_Int* sendcounts, T* recvbuf, MPI_Int re
 
 template <typename T>
 void Scatter(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcounts,
-             std::vector<T>& recvbuf, const MPI_Datatype& type) const
+             std::vector<T>& recvbuf, const Datatype& type) const
 {
     MPIWRAP_ASSERT(sendbuf.size() == sum(sendcounts),
                    "Send buffer size must equal the sum of the send counts.");
@@ -1124,14 +1124,14 @@ void Scatter(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcoun
 
 template <typename T>
 void Scatter(const T* sendbuf, const MPI_Int* sendcounts, const MPI_Int* senddispls, T* recvbuf, MPI_Int recvcount,
-              const MPI_Datatype& type) const
+              const Datatype& type) const
 {
     MPIWRAP_CALL(MPI_Scatterv(sendbuf, sendcounts, senddispls, type, recvbuf, recvcount, type, rank, comm));
 }
 
 template <typename T>
 void Scatter(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcounts,
-             const std::vector<MPI_Int>& senddispls, std::vector<T>& recvbuf, const MPI_Datatype& type) const
+             const std::vector<MPI_Int>& senddispls, std::vector<T>& recvbuf, const Datatype& type) const
 {
     MPIWRAP_ASSERT(sendcounts.size() == size,
                    "There must be exactly one send count for each process.");
@@ -1161,7 +1161,7 @@ void Scatter(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcoun
 }
 
 template <typename T>
-void Scatter(const T* sendbuf, const MPI_Int* sendcounts, const MPI_Datatype& type) const
+void Scatter(const T* sendbuf, const MPI_Int* sendcounts, const Datatype& type) const
 {
     std::vector<MPI_Int> senddispls = displacements(sendcounts);
     Scatter(sendbuf, sendcounts, &senddispls.front(), type);
@@ -1169,7 +1169,7 @@ void Scatter(const T* sendbuf, const MPI_Int* sendcounts, const MPI_Datatype& ty
 
 template <typename T>
 void Scatter(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcounts,
-             const MPI_Datatype& type) const
+             const Datatype& type) const
 {
     MPIWRAP_ASSERT(sendbuf.size() == sum(sendcounts),
                    "Send buffer size must equal the sum of the send counts.");
@@ -1189,7 +1189,7 @@ void Scatter(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcoun
 }
 
 template <typename T>
-void Scatter(const T* sendbuf, const MPI_Int* sendcounts, const MPI_Int* senddispls, const MPI_Datatype& type) const
+void Scatter(const T* sendbuf, const MPI_Int* sendcounts, const MPI_Int* senddispls, const Datatype& type) const
 {
 #if MPIWRAP_VERSION_AT_LEAST(2,0)
     MPIWRAP_CALL(MPI_Scatterv(sendbuf, sendcounts, senddispls, type, MPI_IN_PLACE, 0, type, rank, comm));
@@ -1202,7 +1202,7 @@ void Scatter(const T* sendbuf, const MPI_Int* sendcounts, const MPI_Int* senddis
 
 template <typename T>
 void Scatter(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcounts, const std::vector<MPI_Int>& senddispls,
-             const MPI_Datatype& type) const
+             const Datatype& type) const
 {
     MPIWRAP_ASSERT(sendcounts.size() == size,
                    "There must be exactly one send count for each process.");

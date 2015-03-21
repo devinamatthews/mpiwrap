@@ -26,19 +26,19 @@ class Comm
             return size;
         }
 
-        std::vector<MPI_Int> displacements(const MPI_Int* counts)
+        std::vector<MPI_Int> displacements(const MPI_Int* counts) const
         {
             std::vector<MPI_Int> displs(size);
             std::partial_sum(counts, counts+size-1, displs.begin()+1);
             return displs;
         }
 
-        std::vector<MPI_Int> displacements(const std::vector<MPI_Int>& counts)
+        std::vector<MPI_Int> displacements(const std::vector<MPI_Int>& counts) const
         {
             return displacements(&counts.front());
         }
 
-        MPI_Int sum(const std::vector<MPI_Int>& counts)
+        MPI_Int sum(const std::vector<MPI_Int>& counts) const
         {
             return std::accumulate(counts.begin(), counts.end(), 0);
         }
@@ -50,7 +50,7 @@ class Comm
         Comm()
         : comm(MPI_COMM_NULL), rank(0), size(0) {}
 
-        Comm(const MPI_Comm& comm)
+        explicit Comm(const MPI_Comm& comm)
         : comm(comm), rank(getRank(comm)), size(getSize(comm)) {}
 
         operator MPI_Comm&() { return comm; }

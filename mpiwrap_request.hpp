@@ -14,9 +14,11 @@ class Request
     protected:
         MPI_Request req;
 
-        Request(const MPI_Request& req) : req(req) {}
-
     public:
+        Request() : req(MPI_REQUEST_NULL) {}
+
+        explicit Request(const MPI_Request& req) : req(req) {}
+
         operator MPI_Request&() { return req; }
 
         operator const MPI_Request&() const { return req; }
@@ -108,7 +110,7 @@ class Request
 #if MPIWRAP_VERSION_AT_LEAST(2,0)
             MPI_Int i, flag;
             MPIWRAP_CALL(MPI_Testany(count, reinterpret_cast<MPI_Request*>(reqs), &i, &flag, MPI_STATUS_IGNORE));
-            return (flag ? reqs[i] : NULL);
+            return (flag ? &reqs[i] : NULL);
 #else
             Status status;
             return testAny(reqs, count, status);
@@ -124,7 +126,7 @@ class Request
         {
             MPI_Int i, flag;
             MPIWRAP_CALL(MPI_Testany(count, reinterpret_cast<MPI_Request*>(reqs), &i, &flag, status));
-            return (flag ? reqs[i] : NULL);
+            return (flag ? &reqs[i] : NULL);
         }
 
         friend Request* testAny(std::vector<Request>& reqs, Status& status)
@@ -195,7 +197,7 @@ class Request
 #if MPIWRAP_VERSION_AT_LEAST(2,0)
             std::vector<MPI_Int> i(count);
             MPI_Int n;
-            MPIWRAP_ASSERT(MPI_Waitsome(count, reinterpret_cast<MPI_Request*>(reqs), &n, &i.front(), MPI_STATUSES_IGNORE))
+            MPIWRAP_CALL(MPI_Waitsome(count, reinterpret_cast<MPI_Request*>(reqs), &n, &i.front(), MPI_STATUSES_IGNORE))
             std::vector<Request*> ret(n);
             for (MPI_Int j = 0;j < n;j++)
             {
@@ -217,7 +219,7 @@ class Request
         {
             std::vector<MPI_Int> i(count);
             MPI_Int n;
-            MPIWRAP_ASSERT(MPI_Waitsome(count, reinterpret_cast<MPI_Request*>(reqs), &n, &i.front(), reinterpret_cast<MPI_Status*>(stats)))
+            MPIWRAP_CALL(MPI_Waitsome(count, reinterpret_cast<MPI_Request*>(reqs), &n, &i.front(), reinterpret_cast<MPI_Status*>(stats)))
             std::vector<Request*> ret(n);
             for (MPI_Int j = 0;j < n;j++)
             {
@@ -238,7 +240,7 @@ class Request
 #if MPIWRAP_VERSION_AT_LEAST(2,0)
             std::vector<MPI_Int> i(count);
             MPI_Int n;
-            MPIWRAP_ASSERT(MPI_Testsome(count, reinterpret_cast<MPI_Request*>(reqs), &n, &i.front(), MPI_STATUSES_IGNORE))
+            MPIWRAP_CALL(MPI_Testsome(count, reinterpret_cast<MPI_Request*>(reqs), &n, &i.front(), MPI_STATUSES_IGNORE))
             std::vector<Request*> ret(n);
             for (MPI_Int j = 0;j < n;j++)
             {
@@ -260,7 +262,7 @@ class Request
         {
             std::vector<MPI_Int> i(count);
             MPI_Int n;
-            MPIWRAP_ASSERT(MPI_Testsome(count, reinterpret_cast<MPI_Request*>(reqs), &n, &i.front(), reinterpret_cast<MPI_Status*>(stats)))
+            MPIWRAP_CALL(MPI_Testsome(count, reinterpret_cast<MPI_Request*>(reqs), &n, &i.front(), reinterpret_cast<MPI_Status*>(stats)))
             std::vector<Request*> ret(n);
             for (MPI_Int j = 0;j < n;j++)
             {
