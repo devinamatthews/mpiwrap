@@ -6,8 +6,17 @@
 namespace MPIWrap
 {
 
+namespace internal
+{
+    template <typename Derived> class Comm;
+}
+
 class Group
 {
+    friend class Intercomm;
+    friend class Intracomm;
+    template <typename Derived> friend class internal::Comm;
+
     protected:
         MPI_Group group;
 
@@ -25,20 +34,6 @@ class Group
             return size;
         }
 
-    public:
-        struct Range
-        {
-            MPI_Int from, to, stride;
-            Range(MPI_Int from, MPI_Int to, MPI_Int stride)
-            : from(from), to(to), stride(stride) {}
-        };
-
-        const MPI_Int rank;
-        const MPI_Int size;
-
-        Group()
-        : group(MPI_GROUP_NULL), rank(0), size(0) {}
-
         explicit Group(const MPI_Group& group)
         : group(group), rank(getRank(group)), size(getSize(group)) {}
 
@@ -50,10 +45,34 @@ class Group
 
         operator const MPI_Group*() const { return &group; }
 
+    public:
+        struct Range
+        {
+            MPI_Int from, to, stride;
+            Range(MPI_Int from, MPI_Int to, MPI_Int stride)
+            : from(from), to(to), stride(stride) {}
+        };
+
+        const MPI_Int rank;
+        const MPI_Int size;
+
+        Group(Group&& other) : group(other.group), rank(other.rank), size(other.size)
+        {
+            other.group = MPI_GROUP_NULL;
+        }
+
+        ~Group()
+        {
+            if (group != MPI_GROUP_NULL)
+            {
+                MPIWRAP_CALL(MPI_Group_free(&group));
+            }
+        }
+
         std::vector<MPI_Int> translateRanks(const MPI_Int* ranks, MPI_Int count, const Group& other) const
         {
             std::vector<MPI_Int> other_ranks(count);
-            MPIWRAP_CALL(MPI_Group_translate_ranks(group, count, nconst(ranks), other, &other_ranks.front()));
+            MPIWRAP_CALL(MPI_Group_translate_ranks(group, count, nc(ranks), other, &other_ranks.front()));
             return other_ranks;
         }
 
@@ -66,30 +85,30 @@ class Group
 
         Group together(const Group& other) const
         {
-            Group g;
-            MPIWRAP_CALL(MPI_Group_union(group, other, g));
-            return g;
+            MPI_Group g;
+            MPIWRAP_CALL(MPI_Group_union(group, other, &g));
+            return Group(g);
         }
 
         Group intersection(const Group& other) const
         {
-            Group g;
-            MPIWRAP_CALL(MPI_Group_intersection(group, other, g));
-            return g;
+            MPI_Group g;
+            MPIWRAP_CALL(MPI_Group_intersection(group, other, &g));
+            return Group(g);
         }
 
         Group difference(const Group& other) const
         {
-            Group g;
-            MPIWRAP_CALL(MPI_Group_difference(group, other, g));
-            return g;
+            MPI_Group g;
+            MPIWRAP_CALL(MPI_Group_difference(group, other, &g));
+            return Group(g);
         }
 
         Group including(const MPI_Int* ranks, MPI_Int count)
         {
-            Group g;
-            MPIWRAP_CALL(MPI_Group_incl(group, count, nconst(ranks), g));
-            return g;
+            MPI_Group g;
+            MPIWRAP_CALL(MPI_Group_incl(group, count, nc(ranks), &g));
+            return Group(g);
         }
 
         Group including(const std::vector<MPI_Int>& ranks)
@@ -99,9 +118,9 @@ class Group
 
         Group excluding(const MPI_Int* ranks, MPI_Int count)
         {
-            Group g;
-            MPIWRAP_CALL(MPI_Group_excl(group, count, nconst(ranks), g));
-            return g;
+            MPI_Group g;
+            MPIWRAP_CALL(MPI_Group_excl(group, count, nc(ranks), &g));
+            return Group(g);
         }
 
         Group excluding(const std::vector<MPI_Int>& ranks)
@@ -111,9 +130,9 @@ class Group
 
         Group including(const Range* ranges, MPI_Int count)
         {
-            Group g;
-            MPIWRAP_CALL(MPI_Group_incl(group, count, reinterpret_cast<MPI_Int*>(nconst(ranges)), g));
-            return g;
+            MPI_Group g;
+            MPIWRAP_CALL(MPI_Group_incl(group, count, reinterpret_cast<MPI_Int*>(nc(ranges)), &g));
+            return Group(g);
         }
 
         Group including(const std::vector<Range>& ranges)
@@ -123,21 +142,14 @@ class Group
 
         Group excluding(const Range* ranges, MPI_Int count)
         {
-            Group g;
-            MPIWRAP_CALL(MPI_Group_excl(group, count, reinterpret_cast<MPI_Int*>(nconst(ranges)), g));
-            return g;
+            MPI_Group g;
+            MPIWRAP_CALL(MPI_Group_excl(group, count, reinterpret_cast<MPI_Int*>(nc(ranges)), &g));
+            return Group(g);
         }
 
         Group excluding(const std::vector<Range>& ranges)
         {
             return excluding(&ranges.front(), ranges.size());
-        }
-
-        void free()
-        {
-            MPIWRAP_ASSERT(group != MPI_GROUP_NULL,
-                           "You cannot free MPI_GROUP_NULL.");
-            MPIWRAP_CALL(MPI_Group_free(&group));
         }
 };
 

@@ -54,29 +54,64 @@ typedef MPIWRAP_INT MPIWrap_Int;
 namespace MPIWrap
 {
     template <typename T>
-    T* nconst(const T* x)
+    T* nc(const T* x)
     {
         return const_cast<T*>(x);
     }
 
-#if MPIWRAP_CPP11
-
     template <typename T>
     typename std::enable_if<!std::is_pointer<typename std::remove_reference<T>::type>::value,T&&>::type
-    nconst(const T&& x)
+    nc(const T&& x)
     {
         return const_cast<T&&>(x);
     }
 
-#else
-
-    template <typename T>
-    T& nconst(const T& x)
+    enum Collective
     {
-        return const_cast<T&>(x);
-    }
+        ALLGATHER,
+        ALLGATHERV,
+        ALLTOALL,
+        ALLTOALLV,
+        ALLTOALLW,
+        ALLREDUCE,
+        BARRIER,
+        BCAST,
+        GATHER,
+        GATHERV,
+        REDUCE,
+        REDUCE_SCATTER,
+        REDUCE_SCATTER_BLOCK,
+        SCATTER,
+        SCATTERV,
+        IALLGATHER,
+        IALLGATHERV,
+        IALLTOALL,
+        IALLTOALLV,
+        IALLTOALLW,
+        IALLREDUCE,
+        IBARRIER,
+        IBCAST,
+        IGATHER,
+        IGATHERV,
+        IREDUCE,
+        IREDUCE_SCATTER,
+        IREDUCE_SCATTER_BLOCK,
+        ISCATTER,
+        ISCATTERV,
+        NUM_COLLECTIVES
+    };
 
-#endif
+    inline MPI_Int Tag_UB()
+    {
+        static const MPI_Int* ub = NULL;
+        if (!ub)
+        {
+            MPI_Int flag;
+            MPIWRAP_CALL(MPI_Comm_get_attr(MPI_COMM_WORLD, MPI_TAG_UB, &ub, &flag));
+            MPIWRAP_ASSERT(flag, "Error in MPI_Comm_get_attr(MPI_TAG_UB)");
+        }
+        return *ub-NUM_COLLECTIVES;
+    }
 }
 
 #endif

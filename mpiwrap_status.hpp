@@ -44,16 +44,33 @@ class Status
         MPI_Int count(const MPI_Datatype& type) const
         {
             MPI_Int n;
-            MPIWRAP_CALL(MPI_Get_count(nconst(&status), type, &n));
+            MPIWRAP_CALL(MPI_Get_count(nc(&status), type, &n));
+            return n;
+        }
+
+        template <typename T>
+        MPI_Int elements() const
+        {
+            return elements(MPI_TYPE_<T>::value());
+        }
+
+        MPI_Int elements(const MPI_Datatype& type) const
+        {
+            MPI_Int n;
+            MPIWRAP_CALL(MPI_Get_elements(nc(&status), type, &n));
             return n;
         }
 
         bool cancelled() const
         {
             MPI_Int flag;
-            MPIWRAP_CALL(MPI_Test_cancelled(nconst(&status), &flag));
+            MPIWRAP_CALL(MPI_Test_cancelled(nc(&status), &flag));
             return flag;
         }
+
+        // TODO: pack and unpack (incl. external)
+
+        // TODO: envelope, contents
 };
 
 }

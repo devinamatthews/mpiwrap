@@ -10,41 +10,88 @@
 namespace MPIWrap
 {
 
-class Intracomm : public Comm
+class Intracomm : protected internal::Comm<Intracomm>
 {
-    public:
-        Intracomm() {}
+    friend class Intercomm;
+    template <typename Derived> friend class internal::Comm;
 
-        explicit Intracomm(const MPI_Comm& comm) : Comm(comm) {}
+    protected:
+        explicit Intracomm(const MPI_Comm& comm)
+        : internal::Comm<Intracomm>(comm, getSize(comm))
+        {
+            MPIWRAP_ASSERT(!isIntercommunicator(), "comm must be an intra-communicator.");
+        }
+
+    public:
+        Intracomm(Intracomm&& other) : internal::Comm<Intracomm>(std::move(other)) {}
+
+        using internal::Comm<Intracomm>::rank;
+        using internal::Comm<Intracomm>::size;
+        using internal::Comm<Intracomm>::group;
+        using internal::Comm<Intracomm>::compare;
+        using internal::Comm<Intracomm>::duplicate;
+        using internal::Comm<Intracomm>::subset;
+        using internal::Comm<Intracomm>::split;
+        using internal::Comm<Intracomm>::isIntercommunicator;
+        using internal::Comm<Intracomm>::isIntracommunicator;
+        using internal::Comm<Intracomm>::Recv_init;
+        using internal::Comm<Intracomm>::Bsend_init;
+        using internal::Comm<Intracomm>::Rsend_init;
+        using internal::Comm<Intracomm>::Send_init;
+        using internal::Comm<Intracomm>::Sendrecv;
+        using internal::Comm<Intracomm>::Ssend_init;
+        using internal::Comm<Intracomm>::Mprobe;
+        using internal::Comm<Intracomm>::Probe;
+        using internal::Comm<Intracomm>::Recv;
+        using internal::Comm<Intracomm>::Bsend;
+        using internal::Comm<Intracomm>::Rsend;
+        using internal::Comm<Intracomm>::Send;
+        using internal::Comm<Intracomm>::Ssend;
+        using internal::Comm<Intracomm>::Improbe;
+        using internal::Comm<Intracomm>::Iprobe;
+        using internal::Comm<Intracomm>::Irecv;
+        using internal::Comm<Intracomm>::Ibsend;
+        using internal::Comm<Intracomm>::Irsend;
+        using internal::Comm<Intracomm>::Isend;
+        using internal::Comm<Intracomm>::Issend;
+        using internal::Comm<Intracomm>::Allgather;
+        using internal::Comm<Intracomm>::Allreduce;
+        using internal::Comm<Intracomm>::Alltoall;
+        using internal::Comm<Intracomm>::Barrier;
+        using internal::Comm<Intracomm>::Reduce_scatter;
+        using internal::Comm<Intracomm>::Iallgather;
+        using internal::Comm<Intracomm>::Iallreduce;
+        using internal::Comm<Intracomm>::Ialltoall;
+        using internal::Comm<Intracomm>::Ibarrier;
+        using internal::Comm<Intracomm>::Ireduce_scatter;
+        using internal::Comm<Intracomm>::operator MPI_Comm&;
+        using internal::Comm<Intracomm>::operator const MPI_Comm&;
+        using internal::Comm<Intracomm>::operator MPI_Comm*;
+        using internal::Comm<Intracomm>::operator const MPI_Comm*;
 
         /*
-         * MPI_Allgather
-         */
-
-        template <typename T>
-        void Allgather(const T* sendbuf, T* recvbuf, MPI_Int count) const
+         * OpenMPI 1.7.2 doesn't seem to support this.
+         *
+        Intracomm subset(const Group& group, MPI_Int tag) const
         {
-            Allgather(sendbuf, recvbuf, count, MPI_TYPE_<T>::value());
+            MPI_Comm c;
+            MPIWRAP_CALL(MPI_Comm_create_group(comm, group, tag, &c));
+            return Intracomm(c);
+        }
+        */
+
+        Intercomm intercomm(MPI_Int leader) const;
+
+        Intercomm intercomm(MPI_Int leader, const Intracomm& peerComm, MPI_Int remoteLeader, MPI_Int tag) const;
+
+        static Intracomm world()
+        {
+            return Intracomm(MPI_COMM_WORLD);
         }
 
-        template <typename T>
-        void Allgather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf) const
+        static Intracomm self()
         {
-            Allgather(sendbuf, recvbuf, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        void Allgather(const T* sendbuf, T* recvbuf, MPI_Int count, const Datatype& type) const
-        {
-            MPIWRAP_CALL(MPI_Allgather(sendbuf, count, type, recvbuf, count, type, comm));
-        }
-
-        template <typename T>
-        void Allgather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const Datatype& type) const
-        {
-            MPIWRAP_ASSERT(sendbuf.size() == recvbuf.size(),
-                           "Send and receive buffers must be the same size.");
-            Allgather(&sendbuf.front(), &recvbuf.front(), sendbuf.size(), type);
+            return Intracomm(MPI_COMM_SELF);
         }
 
         /*
@@ -75,73 +122,6 @@ class Intracomm : public Comm
             MPIWRAP_ASSERT(recvbuf.size()%size == 0,
                            "Receive buffer size must be a multiple of the communicator size.");
             Allgather(&recvbuf.front(), recvbuf.size()/size, type);
-        }
-
-        /*
-         * MPI_Allgatherv
-         */
-
-        template <typename T>
-        void Allgather(const T* sendbuf, MPI_Int sendcount, T* recvbuf, const MPI_Int* recvcounts) const
-        {
-            Allgather(sendbuf, sendcount, recvbuf, recvcounts, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        void Allgather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf,
-                       const std::vector<MPI_Int>& recvcounts) const
-        {
-            Allgather(sendbuf, recvbuf, recvcounts, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        void Allgather(const T* sendbuf, MPI_Int sendcount, T* recvbuf, const MPI_Int* recvcounts,
-                       const Datatype& type) const
-        {
-            std::vector<MPI_Int> recvdispls = displacements(recvcounts);
-            Allgather(sendbuf, sendcount, recvbuf, recvcounts, recvdispls, type);
-        }
-
-        template <typename T>
-        void Allgather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts,
-                       const Datatype& type) const
-        {
-            MPIWRAP_ASSERT(recvbuf.size() == sum(recvcounts),
-                           "The receive buffer size must equal the sum of the receive counts.");
-            Allgather(sendbuf, recvbuf, recvcounts, displacements(recvcounts), type);
-        }
-
-        template <typename T>
-        void Allgather(const T* sendbuf, MPI_Int sendcount, T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls) const
-        {
-            Allgather(sendbuf, sendcount, recvbuf, recvcounts, recvdispls, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        void Allgather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf,
-                       const std::vector<MPI_Int>& recvcounts, const std::vector<MPI_Int>& recvdispls) const
-        {
-            Allgather(sendbuf, recvbuf, recvcounts, recvdispls, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        void Allgather(const T* sendbuf, MPI_Int sendcount, T* recvbuf, const MPI_Int* recvcounts,
-                       const MPI_Int* recvdispls, const Datatype& type) const
-        {
-            MPIWRAP_CALL(MPI_Allgatherv(sendbuf, sendcount, type, recvbuf, recvcounts, recvdispls, type, comm));
-        }
-
-        template <typename T>
-        void Allgather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts,
-                       const std::vector<MPI_Int>& recvdispls, const Datatype& type) const
-        {
-            MPIWRAP_ASSERT(recvcounts.size() == size,
-                           "There must be exactly one receive count for each process.");
-            MPIWRAP_ASSERT(recvcounts.size() == size,
-                           "There must be exactly one receive displacement for each process.");
-            MPIWRAP_ASSERT(recvbuf.size() >= recvdispls[size-1]+recvcounts[size-1],
-                           "The receive buffer size must be at least as large the sum of last receive count and the last receive displacement.");
-            Allgather(&sendbuf.front(), sendbuf.size(), &recvbuf.front(), &recvcounts.front(), &recvdispls.front(), type);
         }
 
         /*
@@ -206,37 +186,6 @@ class Intracomm : public Comm
         }
 
         /*
-         * MPI_Allreduce
-         */
-
-        template <typename T>
-        void Allreduce(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op) const
-        {
-            Allreduce(sendbuf, recvbuf, count, op, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        void Allreduce(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op) const
-        {
-            Allreduce(sendbuf, recvbuf, op, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        void Allreduce(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
-        {
-            MPIWRAP_CALL(MPI_Allreduce(sendbuf, recvbuf, count, type, op, comm));
-        }
-
-        template <typename T>
-        void Allreduce(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op,
-                       const Datatype& type) const
-        {
-            MPIWRAP_ASSERT(sendbuf.size() == recvbuf.size(),
-                           "Send and receive buffers must be the same size.");
-            Allreduce(&sendbuf.front(), &recvbuf.front(), sendbuf.size(), op, type);
-        }
-
-        /*
          * MPI_Allreduce in-place
          */
 
@@ -265,133 +214,107 @@ class Intracomm : public Comm
         }
 
         /*
-         * MPI_Alltoall
+         * MPI_Alltoall in-place
          */
 
         template <typename T>
-        void Alltoall(const T* sendbuf, T* recvbuf, MPI_Int count) const
+        void Alltoall(T* recvbuf, MPI_Int count) const
         {
-            Alltoall(sendbuf, recvbuf, count, MPI_TYPE_<T>::value());
+            Alltoall(recvbuf, count, MPI_TYPE_<T>::value());
         }
 
         template <typename T>
-        void Alltoall(const std::vector<T>& sendbuf, std::vector<T>& recvbuf) const
+        void Alltoall(std::vector<T>& recvbuf) const
         {
-            Alltoall(sendbuf, recvbuf, MPI_TYPE_<T>::value());
+            Alltoall(recvbuf, MPI_TYPE_<T>::value());
         }
 
         template <typename T>
-        void Alltoall(const T* sendbuf, T* recvbuf, MPI_Int count, const Datatype& type) const
+        void Alltoall(T* recvbuf, MPI_Int count, const Datatype& type) const
         {
-            MPIWRAP_CALL(MPI_Alltoall(nconst(sendbuf), count, type, recvbuf, count, type, comm));
+            MPIWRAP_CALL(MPI_Alltoall(MPI_IN_PLACE, 0, type, recvbuf, count, type, comm));
         }
 
         template <typename T>
-        void Alltoall(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const Datatype& type) const
+        void Alltoall(std::vector<T>& recvbuf, const Datatype& type) const
         {
-            MPIWRAP_ASSERT(sendbuf.size() == recvbuf.size(),
-                           "Send and receive buffers must be the same size.");
             MPIWRAP_ASSERT(recvbuf.size()%size == 0,
                            "Receive buffer size must be a multiple of the communicator size.");
-            Alltoall(&sendbuf.front(), &recvbuf.front(), recvbuf.size()/size, type);
+            Alltoall(&recvbuf.front(), recvbuf.size()/size, type);
         }
 
         /*
-         * MPI_Alltoallv
+         * MPI_Alltoallv in-place
          */
 
         template <typename T>
-        void Alltoall(const T* sendbuf, const MPI_Int* sendcounts, T* recvbuf, const MPI_Int* recvcounts) const
+        void Alltoall(T* recvbuf, const MPI_Int* recvcounts) const
         {
-            Alltoall(sendbuf, sendcounts, recvbuf, recvcounts, MPI_TYPE_<T>::value());
+            Alltoall(recvbuf, recvcounts, MPI_TYPE_<T>::value());
         }
 
         template <typename T>
-        void Alltoall(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcounts,
-                            std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts) const
+        void Alltoall(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts) const
         {
-            Alltoall(sendbuf, sendcounts, recvbuf, recvcounts, MPI_TYPE_<T>::value());
+            Alltoall(recvbuf, recvcounts, MPI_TYPE_<T>::value());
         }
 
         template <typename T>
-        void Alltoall(const T* sendbuf, const MPI_Int* sendcounts,
-                            T* recvbuf, const MPI_Int* recvcounts, const Datatype& type) const
+        void Alltoall(T* recvbuf, const MPI_Int* recvcounts, const Datatype& type) const
         {
-            std::vector<MPI_Int> senddispls = displacements(sendcounts);
             std::vector<MPI_Int> recvdispls = displacements(recvcounts);
-            Alltoall(sendbuf, sendcounts, senddispls,
-                     recvbuf, recvcounts, recvdispls, type);
+            Alltoall(recvbuf, recvcounts, recvdispls, type);
         }
 
         template <typename T>
-        void Alltoall(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcounts,
-                            std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts,
+        void Alltoall(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts,
                       const Datatype& type) const
         {
-            MPIWRAP_ASSERT(sendbuf.size() == sum(sendcounts),
-                           "The send buffer size must equal the sum of the send counts.");
             MPIWRAP_ASSERT(recvbuf.size() == sum(recvcounts),
                            "The receive buffer size must equal the sum of the receive counts.");
-            Alltoall(sendbuf, sendcounts, displacements(sendcounts),
-                     recvbuf, recvcounts, displacements(recvcounts), type);
+            Alltoall(recvbuf, recvcounts, displacements(recvcounts), type);
         }
 
         template <typename T>
-        void Alltoall(const T* sendbuf, const MPI_Int* sendcounts, const MPI_Int* senddispls,
-                            T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls) const
+        void Alltoall(T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls) const
         {
-            Alltoall(sendbuf, sendcounts, senddispls,
-                     recvbuf, recvcounts, recvdispls, MPI_TYPE_<T>::value());
+            Alltoall(recvbuf, recvcounts, recvdispls, MPI_TYPE_<T>::value());
         }
 
         template <typename T>
-        void Alltoall(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcounts, const std::vector<MPI_Int>& senddispls,
-                            std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, const std::vector<MPI_Int>& recvdispls) const
+        void Alltoall(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, const std::vector<MPI_Int>& recvdispls) const
         {
-            Alltoall(sendbuf, sendcounts, senddispls,
-                     recvbuf, recvcounts, recvdispls, MPI_TYPE_<T>::value());
+            Alltoall(recvbuf, recvcounts, recvdispls, MPI_TYPE_<T>::value());
         }
 
         template <typename T>
-        void Alltoall(const T* sendbuf, const MPI_Int* sendcounts, const MPI_Int* senddispls,
-                            T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls, const Datatype& type) const
+        void Alltoall(T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls, const Datatype& type) const
         {
-            MPIWRAP_CALL(MPI_Alltoallv(nconst(sendbuf), nconst(sendcounts), nconst(senddispls), type,
-                                              recvbuf , nconst(recvcounts), nconst(recvdispls), type, comm));
+            MPIWRAP_CALL(MPI_Alltoallv(MPI_IN_PLACE, NULL, NULL, type,
+                                       recvbuf, recvcounts, recvdispls, type, comm));
         }
 
         template <typename T>
-        void Alltoall(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcounts, const std::vector<MPI_Int>& senddispls,
-                            std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, const std::vector<MPI_Int>& recvdispls,
+        void Alltoall(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, const std::vector<MPI_Int>& recvdispls,
                       const Datatype& type) const
         {
-            MPIWRAP_ASSERT(sendcounts.size() == size,
-                           "There must be exactly one send count for each process.");
-            MPIWRAP_ASSERT(recvcounts.size() == size,
+            MPIWRAP_ASSERT(recvcounts.size() == npeers,
                            "There must be exactly one receive count for each process.");
-            MPIWRAP_ASSERT(senddispls.size() == size,
-                           "There must be exactly one send displacement for each process.");
-            MPIWRAP_ASSERT(recvdispls.size() == size,
+            MPIWRAP_ASSERT(recvdispls.size() == npeers,
                            "There must be exactly one receive displacement for each process.");
-            MPIWRAP_ASSERT(sendbuf.size() >= senddispls[size-1]+sendcounts[size-1],
-                           "The send buffer size must be at least as large the sum of last send count and the last send displacement.");
-            MPIWRAP_ASSERT(recvbuf.size() >= recvdispls[size-1]+recvcounts[size-1],
+            MPIWRAP_ASSERT(recvbuf.size() >= recvdispls[npeers-1]+recvcounts[npeers-1],
                            "The receive buffer size must be at least as large the sum of last receive count and the last receive displacement.");
-            Alltoall(&sendbuf.front(), &sendcounts.front(), &senddispls.front(),
-                     &recvbuf.front(), &recvcounts.front(), &recvdispls.front(), type);
+            Alltoall(&recvbuf.front(), &recvcounts.front(), &recvdispls.front(), type);
         }
 
         /*
-         * MPI_Barrier
+         * MPI_Alltoallw in-place
          */
 
-        void Barrier() const
-        {
-            MPIWRAP_CALL(MPI_Barrier(comm));
-        }
+        //TODO
 
         /*
-         * MPI_Bcast
+         * MPI_Bcast non-root
          */
 
         template <typename T>
@@ -419,33 +342,31 @@ class Intracomm : public Comm
         }
 
         /*
-         * MPI_Exscan
+         * MPI_Bcast root
          */
 
         template <typename T>
-        void Exscan(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op) const
+        void Bcast(const T* buffer, MPI_Int count) const
         {
-            Exscan(sendbuf, recvbuf, count, op, MPI_TYPE_<T>::value());
+            Bcast(buffer, count, MPI_TYPE_<T>::value());
         }
 
         template <typename T>
-        void Exscan(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op) const
+        void Bcast(const std::vector<T>& buffer) const
         {
-            Exscan(sendbuf, recvbuf, op, MPI_TYPE_<T>::value());
+            Bcast(buffer, MPI_TYPE_<T>::value());
         }
 
         template <typename T>
-        void Exscan(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
+        void Bcast(const T* buffer, MPI_Int count, const Datatype& type) const
         {
-            MPIWRAP_CALL(MPI_Exscan(sendbuf, recvbuf, count, type, op, comm));
+            MPIWRAP_CALL(MPI_Bcast(const_cast<T*>(buffer), count, type, rank, comm));
         }
 
         template <typename T>
-        void Exscan(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op, const Datatype& type) const
+        void Bcast(const std::vector<T>& buffer, const Datatype& type) const
         {
-            MPIWRAP_ASSERT(sendbuf.size() == recvbuf.size(),
-                           "Send and receive buffers must be the same size.");
-            Exscan(&sendbuf.front(), &recvbuf.begin(), sendbuf.size(), op, type);
+            Bcast(&buffer.front(), buffer.size(), type);
         }
 
         /*
@@ -695,255 +616,6 @@ class Intracomm : public Comm
         }
 
         /*
-         * MPI_Iprobe
-         */
-
-        bool Iprobe(MPI_Int source, MPI_Int tag, Status& status) const
-        {
-            MPI_Int flag;
-            MPIWRAP_CALL(MPI_Iprobe(source, tag, comm, &flag, status));
-            return flag;
-        }
-
-        bool Iprobe(MPI_Int source, MPI_Int tag) const
-        {
-#if MPIWRAP_VERSION_AT_LEAST(2,0)
-            MPI_Int flag;
-            MPIWRAP_CALL(MPI_Iprobe(source, tag, comm, &flag, MPI_STATUS_IGNORE));
-            return flag;
-#else
-            Status status;
-            return Iprobe(source, tag, status);
-#endif
-        }
-
-        /*
-         * MPI_Irecv
-         */
-
-        template <typename T>
-        Request Irecv(T* buf, MPI_Int count, MPI_Int source, MPI_Int tag) const
-        {
-            return Irecv(buf, count, source, tag, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        Request Irecv(std::vector<T>& buf, MPI_Int source, MPI_Int tag) const
-        {
-            return Irecv(buf, source, tag, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        Request Irecv(T* buf, MPI_Int count, MPI_Int source, MPI_Int tag, const Datatype& type) const
-        {
-            Request req;
-            MPIWRAP_CALL(MPI_Irecv(buf, count, type, source, tag, comm, &req));
-            return req;
-        }
-
-        template <typename T>
-        Request Irecv(std::vector<T>& buf, MPI_Int source, MPI_Int tag, const Datatype& type) const
-        {
-            return Irecv(&buf.front(), buf.size(), source, tag, type);
-        }
-
-        /*
-         * MPI_Irsend
-         */
-
-        template <typename T>
-        Request Irsend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag) const
-        {
-            return Irsend(buf, count, dest, tag, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        Request Irsend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag) const
-        {
-            return Irsend(buf, dest, tag, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        Request Irsend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
-        {
-            Request req;
-            MPIWRAP_CALL(MPI_Irsend(buf, count, type, dest, tag, comm, &req));
-            return req;
-        }
-
-        template <typename T>
-        Request Irsend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const Datatype& type) const
-        {
-            return Irsend(&buf.front(), buf.size(), dest, tag, type);
-        }
-
-        /*
-         * MPI_Isend
-         */
-
-        template <typename T>
-        Request Isend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag) const
-        {
-            return Isend(buf, count, dest, tag, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        Request Isend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag) const
-        {
-            return Isend(buf, dest, tag, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        Request Isend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
-        {
-            Request req;
-            MPIWRAP_CALL(MPI_Isend(buf, count, type, dest, tag, comm, &req));
-            return req;
-        }
-
-        template <typename T>
-        Request Isend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const Datatype& type) const
-        {
-            return Isend(&buf.front(), buf.size(), dest, tag, type);
-        }
-
-        /*
-         * MPI_Issend
-         */
-
-        template <typename T>
-        Request Issend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag) const
-        {
-            return Issend(buf, count, dest, tag, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        Request Issend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag) const
-        {
-            return Issend(buf, dest, tag, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        Request Issend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
-        {
-            Request req;
-            MPIWRAP_CALL(MPI_Issend(buf, count, type, dest, tag, comm, &req));
-            return req;
-        }
-
-        template <typename T>
-        Request Issend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const Datatype& type) const
-        {
-            return Issend(&buf.front(), buf.size(), dest, tag, type);
-        }
-
-        /*
-         * MPI_Probe
-         */
-
-        void Probe(MPI_Int source, MPI_Int tag, Status& status) const
-        {
-            MPIWRAP_CALL(MPI_Probe(source, tag, comm, status));
-        }
-
-        void Probe(MPI_Int source, MPI_Int tag) const
-        {
-#if MPIWRAP_VERSION_AT_LEAST(2,0)
-            MPIWRAP_CALL(MPI_Probe(source, tag, comm, MPI_STATUS_IGNORE));
-#else
-            Status status;
-            Probe(source, tag, status);
-#endif
-        }
-
-        /*
-         * MPI_Recv
-         */
-
-        template <typename T>
-        void Recv(T* buf, MPI_Int count, MPI_Int source, MPI_Int tag) const
-        {
-            Recv(buf, count, source, tag, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        void Recv(std::vector<T>& buf, MPI_Int source, MPI_Int tag) const
-        {
-            Recv(buf, source, tag, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        void Recv(T* buf, MPI_Int count, MPI_Int source, MPI_Int tag, const Datatype& type) const
-        {
-#if MPIWRAP_VERSION_AT_LEAST(2,0)
-            MPIWRAP_CALL(MPI_Recv(buf, count, type, source, tag, comm, MPI_STATUS_IGNORE));
-#else
-            Status status;
-            Recv(buf, count, source, tag, status, type);
-#endif
-        }
-
-        template <typename T>
-        void Recv(std::vector<T>& buf, MPI_Int source, MPI_Int tag, const Datatype& type) const
-        {
-            Recv(&buf.front(), buf.size(), source, tag, type);
-        }
-
-        template <typename T>
-        void Recv(T* buf, MPI_Int count, MPI_Int source, MPI_Int tag, Status& status) const
-        {
-            Recv(buf, count, source, tag, status, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        void Recv(std::vector<T>& buf, MPI_Int source, MPI_Int tag, Status& status) const
-        {
-            Recv(buf, source, tag, status, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        void Recv(T* buf, MPI_Int count, MPI_Int source, MPI_Int tag, Status& status, const Datatype& type) const
-        {
-            MPIWRAP_CALL(MPI_Recv(buf, count, type, source, tag, comm, status));
-        }
-
-        template <typename T>
-        void Recv(std::vector<T>& buf, MPI_Int source, MPI_Int tag, Status& status, const Datatype& type) const
-        {
-            Recv(&buf.front(), buf.size(), source, tag, status, type);
-        }
-
-        /*
-         * MPI_Recv_init
-         */
-
-        template <typename T>
-        Request Recv_init(T* buf, MPI_Int count, MPI_Int source, MPI_Int tag) const
-        {
-            return Recv_init(buf, count, source, tag, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        Request Recv_init(std::vector<T>& buf, MPI_Int source, MPI_Int tag) const
-        {
-            return Recv_init(buf, source, tag, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        Request Recv_init(T* buf, MPI_Int count, MPI_Int source, MPI_Int tag, const Datatype& type) const
-        {
-            Request req;
-            MPIWRAP_CALL(MPI_Recv_init(buf, count, type, source, tag, comm, &req));
-            return req;
-        }
-
-        template <typename T>
-        Request Recv_init(std::vector<T>& buf, MPI_Int source, MPI_Int tag, const Datatype& type) const
-        {
-            return Recv_init(&buf.front(), buf.size(), source, tag, type);
-        }
-
-        /*
          * MPI_Reduce non-root
          */
 
@@ -962,7 +634,7 @@ class Intracomm : public Comm
         template <typename T>
         void Reduce(const T* sendbuf, MPI_Int count, const MPI_Op& op, MPI_Int root, const Datatype& type) const
         {
-            MPIWRAP_CALL(MPI_Reduce(nconst(sendbuf), NULL, count, type, op, root, comm));
+            MPIWRAP_CALL(MPI_Reduce(nc(sendbuf), NULL, count, type, op, root, comm));
         }
 
         template <typename T>
@@ -990,7 +662,7 @@ class Intracomm : public Comm
         template <typename T>
         void Reduce(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
         {
-            MPIWRAP_CALL(MPI_Reduce(sendbuf, recvbuf, count, type, op, rank, comm));
+            MPIWRAP_CALL(MPI_Reduce(nc(sendbuf), recvbuf, count, type, op, rank, comm));
         }
 
         template <typename T>
@@ -1030,42 +702,6 @@ class Intracomm : public Comm
         }
 
         /*
-         * MPI_Reduce_scatter
-         */
-
-        template <typename T>
-        void Reduce_scatter(const T* sendbuf, T* recvbuf, MPI_Int* recvcounts, const MPI_Op& op) const
-        {
-            Reduce_scatter(sendbuf, recvbuf, recvcounts, op, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        void Reduce_scatter(const std::vector<T>& sendbuf, std::vector<T>& recvbuf,
-                            std::vector<MPI_Int>& recvcounts, const MPI_Op& op) const
-        {
-            Reduce_scatter(sendbuf, recvbuf, recvcounts, op, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        void Reduce_scatter(const T* sendbuf, T* recvbuf, MPI_Int* recvcounts, const MPI_Op& op, const Datatype& type) const
-        {
-            MPIWRAP_CALL(MPI_Reduce_scatter(sendbuf, recvbuf, recvcounts, type, op, comm));
-        }
-
-        template <typename T>
-        void Reduce_scatter(const std::vector<T>& sendbuf, std::vector<T>& recvbuf,
-                            std::vector<MPI_Int>& recvcounts, const MPI_Op& op, const Datatype& type) const
-        {
-            MPIWRAP_ASSERT(recvcounts.size() == size,
-                           "There must be exactly one receive count for each process.");
-            MPIWRAP_ASSERT(sendbuf.size() == sum(recvcounts),
-                           "The send buffer size must equal the sum of the receive counts.");
-            MPIWRAP_ASSERT(recvbuf.size() == recvcounts[rank],
-                           "The receive buffer size must equal the receive count for this process.");
-            Reduce_scatter(&sendbuf.front(), &recvbuf.front(), &recvcounts.front(), op, type);
-        }
-
-        /*
          * MPI_Reduce_scatter in-place
          */
 
@@ -1098,91 +734,32 @@ class Intracomm : public Comm
         }
 
         /*
-         * MPI_Rsend
+         * MPI_Reduce_scatter_block in-place
          */
 
         template <typename T>
-        void Rsend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag) const
+        void Reduce_scatter(T* recvbuf, MPI_Int count, const MPI_Op& op) const
         {
-            Rsend(buf, count, dest, tag);
+            Reduce_scatter(recvbuf, count, op, MPI_TYPE_<T>::value());
         }
 
         template <typename T>
-        void Rsend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag) const
+        void Reduce_scatter(std::vector<T>& recvbuf, const MPI_Op& op) const
         {
-            Rsend(buf, dest, tag);
+            Reduce_scatter(recvbuf, op, MPI_TYPE_<T>::value());
         }
 
         template <typename T>
-        void Rsend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
+        void Reduce_scatter(T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
         {
-            MPIWRAP_CALL(MPI_Rsend(buf, count, type, dest, tag, comm));
+            MPIWRAP_CALL(MPI_Reduce_scatter(MPI_IN_PLACE, recvbuf, count, type, op, comm));
         }
 
         template <typename T>
-        void Rsend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const Datatype& type) const
+        void Reduce_scatter(std::vector<T>& recvbuf, const MPI_Op& op, const Datatype& type) const
         {
-            Rsend(&buf.front(), buf.size(), dest, tag, type);
-        }
-
-        /*
-         * MPI_Rsend_init
-         */
-
-        template <typename T>
-        Request Rsend_init(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag) const
-        {
-            return Rsend_init(buf, count, dest, tag, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        Request Rsend_init(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag) const
-        {
-            return Rsend_init(buf, dest, tag, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        Request Rsend_init(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
-        {
-            Request req;
-            MPIWRAP_CALL(MPI_Rsend_init(buf, count, type, dest, tag, comm, &req));
-            return req;
-        }
-
-        template <typename T>
-        Request Rsend_init(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const Datatype& type) const
-        {
-            return Rsend_init(&buf.front(), buf.size(), dest, tag, type);
-        }
-
-        /*
-         * MPI_Scan
-         */
-
-        template <typename T>
-        void Scan(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op) const
-        {
-            Scan(sendbuf, recvbuf, count, op, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        void Scan(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op) const
-        {
-            Scan(sendbuf, recvbuf, op, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        void Scan(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
-        {
-            MPIWRAP_CALL(MPI_Scan(sendbuf, recvbuf, count, type, op, comm));
-        }
-
-        template <typename T>
-        void Scan(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op, const Datatype& type) const
-        {
-            MPIWRAP_ASSERT(sendbuf.size() == recvbuf.size(),
-                           "Send and receive buffers must be the same size.");
-            Scan(&sendbuf.front(), &recvbuf.front(), sendbuf.size(), op, type);
+            MPIWRAP_ASSERT(recvbuf.size()%npeers == 0, "Receive buffer size must be a multiple of the number of processes.");
+            Reduce_scatter(&recvbuf.front(), recvbuf.size()/npeers, op, type);
         }
 
         /*
@@ -1260,9 +837,9 @@ class Intracomm : public Comm
         }
 
         template <typename T>
-        void Scatter(const T* sendbuf, MPI_Int sendcount, const Datatype& type) const
+        void Scatter(const T* sendbuf, MPI_Int count, const Datatype& type) const
         {
-            MPIWRAP_CALL(MPI_Scatter(sendbuf, sendcount, type, MPI_IN_PLACE, 0, type, rank, comm));
+            MPIWRAP_CALL(MPI_Scatter(sendbuf, count, type, MPI_IN_PLACE, 0, type, rank, comm));
         }
 
         template <typename T>
@@ -1434,256 +1011,1207 @@ class Intracomm : public Comm
         }
 
         /*
-         * MPI_Send
+         * MPI_Exscan
          */
 
         template <typename T>
-        void Send(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag) const
+        void Exscan(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op) const
         {
-            Send(buf, count, dest, tag, MPI_TYPE_<T>::value());
+            Exscan(sendbuf, recvbuf, count, op, MPI_TYPE_<T>::value());
         }
 
         template <typename T>
-        void Send(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag) const
+        void Exscan(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op) const
         {
-            Send(buf, dest, tag, MPI_TYPE_<T>::value());
+            Exscan(sendbuf, recvbuf, op, MPI_TYPE_<T>::value());
         }
 
         template <typename T>
-        void Send(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
+        void Exscan(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
         {
-            MPIWRAP_CALL(MPI_Send(buf, count, type, dest, tag, comm));
+            MPIWRAP_CALL(MPI_Exscan(sendbuf, recvbuf, count, type, op, comm));
         }
 
         template <typename T>
-        void Send(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const Datatype& type) const
+        void Exscan(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op, const Datatype& type) const
         {
-            Send(&buf.front(), buf.size(), dest, tag, type);
+            MPIWRAP_ASSERT(sendbuf.size() == recvbuf.size(),
+                           "Send and receive buffers must be the same size.");
+            Exscan(&sendbuf.front(), &recvbuf.begin(), sendbuf.size(), op, type);
         }
 
         /*
-         * MPI_Send_init
+         * MPI_Exscan in-place
          */
 
         template <typename T>
-        Request Send_init(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag) const
+        void Exscan(T* recvbuf, MPI_Int count, const MPI_Op& op) const
         {
-            return Send_init(buf, count, dest, tag, MPI_TYPE_<T>::value());
+            Exscan(recvbuf, count, op, MPI_TYPE_<T>::value());
         }
 
         template <typename T>
-        Request Send_init(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag) const
+        void Exscan(std::vector<T>& recvbuf, const MPI_Op& op) const
         {
-            return Send_init(buf, dest, tag, MPI_TYPE_<T>::value());
+            Exscan(recvbuf, op, MPI_TYPE_<T>::value());
         }
 
         template <typename T>
-        Request Send_init(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
+        void Exscan(T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
+        {
+            MPIWRAP_CALL(MPI_Exscan(MPI_IN_PLACE, recvbuf, count, type, op, comm));
+        }
+
+        template <typename T>
+        void Exscan(std::vector<T>& recvbuf, const MPI_Op& op, const Datatype& type) const
+        {
+            Exscan(&recvbuf.front(), recvbuf.size(), op, type);
+        }
+
+        /*
+         * MPI_Scan
+         */
+
+        template <typename T>
+        void Scan(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op) const
+        {
+            Scan(sendbuf, recvbuf, count, op, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        void Scan(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op) const
+        {
+            Scan(sendbuf, recvbuf, op, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        void Scan(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
+        {
+            MPIWRAP_CALL(MPI_Scan(sendbuf, recvbuf, count, type, op, comm));
+        }
+
+        template <typename T>
+        void Scan(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op, const Datatype& type) const
+        {
+            MPIWRAP_ASSERT(sendbuf.size() == recvbuf.size(),
+                           "Send and receive buffers must be the same size.");
+            Scan(&sendbuf.front(), &recvbuf.front(), sendbuf.size(), op, type);
+        }
+
+        /*
+         * MPI_Scan in-place
+         */
+
+        template <typename T>
+        void Scan(T* recvbuf, MPI_Int count, const MPI_Op& op) const
+        {
+            Scan(recvbuf, count, op, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        void Scan(std::vector<T>& recvbuf, const MPI_Op& op) const
+        {
+            Scan(recvbuf, op, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        void Scan(T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
+        {
+            MPIWRAP_CALL(MPI_Scan(MPI_IN_PLACE, recvbuf, count, type, op, comm));
+        }
+
+        template <typename T>
+        void Scan(std::vector<T>& recvbuf, const MPI_Op& op, const Datatype& type) const
+        {
+            Scan(&recvbuf.front(), recvbuf.size(), op, type);
+        }
+
+        /*
+         * MPI_Iallgather in-place
+         */
+
+        template <typename T>
+        Request Iallgather(T* recvbuf, MPI_Int count) const
+        {
+            return Iallgather(recvbuf, count, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iallgather(std::vector<T>& recvbuf) const
+        {
+            return Iallgather(recvbuf, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iallgather(T* recvbuf, MPI_Int count, const Datatype& type) const
         {
             Request req;
-            MPIWRAP_CALL(MPI_Send_init(buf, count, type, dest, tag, comm, &req));
+            MPIWRAP_CALL(MPI_Iallgather(MPI_IN_PLACE, 0, type, recvbuf, count, type, comm, req));
             return req;
         }
 
         template <typename T>
-        Request Send_init(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const Datatype& type) const
+        Request Iallgather(std::vector<T>& recvbuf, const Datatype& type) const
         {
-            return Send_init(&buf.front(), buf.size(), dest, tag, type);
+            MPIWRAP_ASSERT(recvbuf.size()%size == 0,
+                           "Receive buffer size must be a multiple of the communicator size.");
+            return Iallgather(&recvbuf.front(), recvbuf.size()/size, type);
         }
 
         /*
-         * MPI_Sendrecv
+         * MPI_Iallgatherv in-place
          */
 
         template <typename T>
-        void Sendrecv(const T* sendbuf, MPI_Int sendcount, MPI_Int dest,
-                            T* recvbuf, MPI_Int recvcount, MPI_Int source, MPI_Int tag) const
+        Request Iallgather(T* recvbuf, const MPI_Int* recvcounts) const
         {
-            Sendrecv(sendbuf, sendcount, dest,
-                     recvbuf, recvcount, source, tag, MPI_TYPE_<T>::value());
+            return Iallgather(recvbuf, recvcounts, MPI_TYPE_<T>::value());
         }
 
         template <typename T>
-        void Sendrecv(const std::vector<T>& sendbuf, MPI_Int dest,
-                            std::vector<T>& recvbuf, MPI_Int source, MPI_Int tag) const
+        Request Iallgather(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts) const
         {
-            Sendrecv(sendbuf, dest,
-                     recvbuf, source, tag, MPI_TYPE_<T>::value());
+            return Iallgather(recvbuf, recvcounts, MPI_TYPE_<T>::value());
         }
 
         template <typename T>
-        void Sendrecv(const T* sendbuf, MPI_Int sendcount, MPI_Int dest,
-                            T* recvbuf, MPI_Int recvcount, MPI_Int source, MPI_Int tag,
-                      const Datatype& type) const
+        Request Iallgather(T* recvbuf, const MPI_Int* recvcounts, const Datatype& type) const
         {
-#if MPIWRAP_VERSION_AT_LEAST(2,0)
-            MPIWRAP_CALL(MPI_Sendrecv(sendbuf, sendcount, type,   dest, tag,
-                                      recvbuf, recvcount, type, source, tag, comm, MPI_STATUS_IGNORE));
-#else
-            Status status;
-            Sendrecv(sendbuf, sendcount, dest,
-                     recvbuf, recvcount, source, tag, status, type);
-#endif
+            std::vector<MPI_Int> displs = displacements(recvcounts);
+            return Iallgather(recvbuf, recvcounts, displs, type);
         }
 
         template <typename T>
-        void Sendrecv(const std::vector<T>& sendbuf, MPI_Int dest,
-                            std::vector<T>& recvbuf, MPI_Int source, MPI_Int tag,
-                      const Datatype& type) const
+        Request Iallgather(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, const Datatype& type) const
         {
-            Sendrecv(&sendbuf.front(), sendbuf.size(), dest,
-                     &recvbuf.front(), recvbuf.size(), source, tag, type);
+            MPIWRAP_ASSERT(recvbuf.size() == sum(recvcounts),
+                           "The receive buffer size must equal the sum of the receive counts.");
+            return Iallgather(recvbuf, recvcounts, displacements(recvcounts), type);
         }
 
         template <typename T>
-        void Sendrecv(const T* sendbuf, MPI_Int sendcount, MPI_Int dest,
-                            T* recvbuf, MPI_Int recvcount, MPI_Int source, MPI_Int tag, Status& status) const
+        Request Iallgather(T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls) const
         {
-            Sendrecv(sendbuf, sendcount, dest,
-                     recvbuf, recvcount, source, tag, status, MPI_TYPE_<T>::value());
+            return Iallgather(recvbuf, recvcounts, recvdispls, MPI_TYPE_<T>::value());
         }
 
         template <typename T>
-        void Sendrecv(const std::vector<T>& sendbuf, MPI_Int dest,
-                            std::vector<T>& recvbuf, MPI_Int source, MPI_Int tag, Status& status) const
+        Request Iallgather(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, const std::vector<MPI_Int>& recvdispls) const
         {
-            Sendrecv(sendbuf, dest,
-                     recvbuf, source, tag, status, MPI_TYPE_<T>::value());
+            return Iallgather(recvbuf, recvcounts, recvdispls, MPI_TYPE_<T>::value());
         }
 
         template <typename T>
-        void Sendrecv(const T* sendbuf, MPI_Int sendcount, MPI_Int dest,
-                            T* recvbuf, MPI_Int recvcount, MPI_Int source, MPI_Int tag, Status& status,
-                      const Datatype& type) const
-        {
-            MPIWRAP_CALL(MPI_Sendrecv(sendbuf, sendcount, type,   dest, tag,
-                                      recvbuf, recvcount, type, source, tag, comm, status));
-        }
-
-        template <typename T>
-        void Sendrecv(const std::vector<T>& sendbuf, MPI_Int dest,
-                            std::vector<T>& recvbuf, MPI_Int source, MPI_Int tag, Status& status,
-                      const Datatype& type) const
-        {
-            Sendrecv(&sendbuf.front(), sendbuf.size(), dest,
-                     &recvbuf.front(), recvbuf.size(), source, tag, status, type);
-        }
-
-        /*
-         * MPI_Sendrecv_replace
-         */
-
-        template <typename T>
-        void Sendrecv(T* buf, MPI_Int count, MPI_Int dest, MPI_Int source, MPI_Int tag) const
-        {
-            Sendrecv(buf, count, dest, source, tag, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        void Sendrecv(std::vector<T>& buf, MPI_Int dest, MPI_Int source, MPI_Int tag) const
-        {
-            Sendrecv(buf, dest, source, tag, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        void Sendrecv(T* buf, MPI_Int count, MPI_Int dest, MPI_Int source, MPI_Int tag, const Datatype& type) const
-        {
-#if MPIWRAP_VERSION_AT_LEAST(2,0)
-            MPIWRAP_CALL(MPI_Sendrecv_replace(buf, count, type, dest, tag, source, tag, comm, MPI_STATUS_IGNORE));
-#else
-            Status status;
-            Sendrecv(buf, count, dest, source, tag, status, type);
-#endif
-        }
-
-        template <typename T>
-        void Sendrecv(std::vector<T>& buf, MPI_Int dest, MPI_Int source, MPI_Int tag, const Datatype& type) const
-        {
-            Sendrecv(&buf.front(), buf.size(), dest, source, tag, type);
-        }
-
-        template <typename T>
-        void Sendrecv(T* buf, MPI_Int count, MPI_Int dest, MPI_Int source, MPI_Int tag, Status& status) const
-        {
-            Sendrecv(buf, count, dest, source, tag, status, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        void Sendrecv(std::vector<T>& buf, MPI_Int dest, MPI_Int source, MPI_Int tag, Status& status) const
-        {
-            Sendrecv(buf, dest, source, tag, status, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        void Sendrecv(T* buf, MPI_Int count, MPI_Int dest, MPI_Int source, MPI_Int tag, Status& status,
-                      const Datatype& type) const
-        {
-            MPIWRAP_CALL(MPI_Sendrecv_replace(buf, count, type, dest, tag, source, tag, comm, status));
-        }
-
-        template <typename T>
-        void Sendrecv(std::vector<T>& buf, MPI_Int dest, MPI_Int source, MPI_Int tag, Status& status,
-                      const Datatype& type) const
-        {
-            Sendrecv(&buf.front(), buf.size(), dest, source, tag, status, type);
-        }
-
-        /*
-         * MPI_Ssend
-         */
-
-        template <typename T>
-        void Ssend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag) const
-        {
-            Ssend(buf, count, dest, tag, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        void Ssend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag) const
-        {
-            Ssend(buf, dest, tag, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        void Ssend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
-        {
-            MPIWRAP_CALL(MPI_Ssend(buf, count, type, dest, tag, comm));
-        }
-
-        template <typename T>
-        void Ssend(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const Datatype& type) const
-        {
-            Ssend(&buf.front(). buf.size(), dest, tag, type);
-        }
-
-        /*
-         * MPI_Ssend_init
-         */
-
-        template <typename T>
-        Request Ssend_init(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag) const
-        {
-            return Ssend_init(buf, count, dest, tag, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        Request Ssend_init(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag) const
-        {
-            return Ssend_init(buf, dest, tag, MPI_TYPE_<T>::value());
-        }
-
-        template <typename T>
-        Request Ssend_init(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
+        Request Iallgather(T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls, const Datatype& type) const
         {
             Request req;
-            MPIWRAP_CALL(MPI_Ssend_init(buf, count, type, dest, tag, comm, &req));
+            MPIWRAP_CALL(MPI_Iallgatherv(MPI_IN_PLACE, 0, type, recvbuf, recvcounts, recvdispls, type, comm, req));
             return req;
         }
 
         template <typename T>
-        Request Ssend_init(const std::vector<T>& buf, MPI_Int dest, MPI_Int tag, const Datatype& type) const
+        Request Iallgather(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, const std::vector<MPI_Int>& recvdispls, const Datatype& type) const
         {
-            return Ssend_init(&buf.front(), buf.size(), dest, tag, type);
+            MPIWRAP_ASSERT(recvcounts.size() == size,
+                           "There must be exactly one receive count for each process.");
+            MPIWRAP_ASSERT(recvdispls.size() == size,
+                           "There must be exactly one receive displacement for each process.");
+            MPIWRAP_ASSERT(recvbuf.size() >= recvdispls[size-1]+recvcounts[size-1],
+                           "The receive buffer size must be at least as large the sum of last receive count and the last receive displacement.");
+            return Iallgather(&recvbuf.front(), &recvcounts.front(), &recvdispls.front(), type);
+        }
+
+        /*
+         * MPI_Iallreduce in-place
+         */
+
+        template <typename T>
+        Request Iallreduce(T* buf, MPI_Int count, const MPI_Op& op) const
+        {
+            return Iallreduce(buf, count, op, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iallreduce(std::vector<T>& buf, const MPI_Op& op) const
+        {
+            return Iallreduce(buf, op, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iallreduce(T* buf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Iallreduce(MPI_IN_PLACE, buf, count, type, op, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Iallreduce(std::vector<T>& buf, const MPI_Op& op, const Datatype& type) const
+        {
+            return Iallreduce(&buf.front(), buf.size(), op, type);
+        }
+
+        /*
+         * MPI_Ialltoall in-place
+         */
+
+        template <typename T>
+        Request Ialltoall(T* recvbuf, MPI_Int count) const
+        {
+            return Ialltoall(recvbuf, count, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Ialltoall(std::vector<T>& recvbuf) const
+        {
+            return Ialltoall(recvbuf, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Ialltoall(T* recvbuf, MPI_Int count, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Ialltoall(MPI_IN_PLACE, 0, type, recvbuf, count, type, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Ialltoall(std::vector<T>& recvbuf, const Datatype& type) const
+        {
+            MPIWRAP_ASSERT(recvbuf.size()%size == 0,
+                           "Receive buffer size must be a multiple of the communicator size.");
+            return Ialltoall(&recvbuf.front(), recvbuf.size()/size, type);
+        }
+
+        /*
+         * MPI_Ialltoallv in-place
+         */
+
+        template <typename T>
+        Request Ialltoall(T* recvbuf, const MPI_Int* recvcounts) const
+        {
+            return Ialltoall(recvbuf, recvcounts, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Ialltoall(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts) const
+        {
+            return Ialltoall(recvbuf, recvcounts, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Ialltoall(T* recvbuf, const MPI_Int* recvcounts, const Datatype& type) const
+        {
+            std::vector<MPI_Int> recvdispls = displacements(recvcounts);
+            return Ialltoall(recvbuf, recvcounts, recvdispls, type);
+        }
+
+        template <typename T>
+        Request Ialltoall(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts,
+                       const Datatype& type) const
+        {
+            MPIWRAP_ASSERT(recvbuf.size() == sum(recvcounts),
+                           "The receive buffer size must equal the sum of the receive counts.");
+            return Ialltoall(recvbuf, recvcounts, displacements(recvcounts), type);
+        }
+
+        template <typename T>
+        Request Ialltoall(T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls) const
+        {
+            return Ialltoall(recvbuf, recvcounts, recvdispls, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Ialltoall(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, const std::vector<MPI_Int>& recvdispls) const
+        {
+            return Ialltoall(recvbuf, recvcounts, recvdispls, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Ialltoall(T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Ialltoallv(MPI_IN_PLACE, NULL, NULL, type,
+                                        recvbuf, recvcounts, recvdispls, type, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Ialltoall(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, const std::vector<MPI_Int>& recvdispls,
+                       const Datatype& type) const
+        {
+            MPIWRAP_ASSERT(recvcounts.size() == npeers,
+                           "There must be exactly one receive count for each process.");
+            MPIWRAP_ASSERT(recvdispls.size() == npeers,
+                           "There must be exactly one receive displacement for each process.");
+            MPIWRAP_ASSERT(recvbuf.size() >= recvdispls[npeers-1]+recvcounts[npeers-1],
+                           "The receive buffer size must be at least as large the sum of last receive count and the last receive displacement.");
+            return Ialltoall(&recvbuf.front(), &recvcounts.front(), &recvdispls.front(), type);
+        }
+
+        /*
+         * MPI_Ialltoallw in-place
+         */
+
+        //TODO
+
+        /*
+         * MPI_Bcast non-root
+         */
+
+        template <typename T>
+        Request Ibcast(T* buffer, MPI_Int count, MPI_Int root) const
+        {
+            return Ibcast(buffer, count, root, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Ibcast(std::vector<T>& buffer, MPI_Int root) const
+        {
+            return Ibcast(buffer, root, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Ibcast(T* buffer, MPI_Int count, MPI_Int root, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Ibcast(buffer, count, type, root, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Ibcast(std::vector<T>& buffer, MPI_Int root, const Datatype& type) const
+        {
+            return Ibcast(&buffer.front(), buffer.size(), root, type);
+        }
+
+        /*
+         * MPI_Ibcast root
+         */
+
+        template <typename T>
+        Request Ibcast(const T* buffer, MPI_Int count) const
+        {
+            return Ibcast(buffer, count, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Ibcast(const std::vector<T>& buffer) const
+        {
+            return Ibcast(buffer, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Ibcast(const T* buffer, MPI_Int count, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Ibcast(const_cast<T*>(buffer), count, type, rank, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Ibcast(const std::vector<T>& buffer, const Datatype& type) const
+        {
+            return Ibcast(&buffer.front(), buffer.size(), type);
+        }
+
+        /*
+         * MPI_Igather non-root
+         */
+
+        template <typename T>
+        Request Igather(const T* sendbuf, MPI_Int count, MPI_Int root) const
+        {
+            return Igather(sendbuf, count, root, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Igather(const std::vector<T>& sendbuf, MPI_Int root) const
+        {
+            return Igather(sendbuf, root, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Igather(const T* sendbuf, MPI_Int count, MPI_Int root, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Igather(sendbuf, count, type, NULL, 0, type, root, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Igather(const std::vector<T>& sendbuf, MPI_Int root, const Datatype& type) const
+        {
+            return Igather(&sendbuf.front(), sendbuf.size(), root, type);
+        }
+
+        /*
+         * MPI_Igather root
+         */
+
+        template <typename T>
+        Request Igather(const T* sendbuf, T* recvbuf, MPI_Int count) const
+        {
+            return Igather(sendbuf, recvbuf, count, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Igather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf) const
+        {
+            return Igather(sendbuf, recvbuf, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Igather(const T* sendbuf, T* recvbuf, MPI_Int count, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Igather(sendbuf, count, type, recvbuf, count, type, rank, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Igather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const Datatype& type) const
+        {
+            MPIWRAP_ASSERT(size*sendbuf.size() == recvbuf.size(),
+                           "Receive buffers size must be equal communicator size times send buffer size.");
+            return Igather(&sendbuf.front(), &recvbuf.front(), sendbuf.size(), type);
+        }
+
+        /*
+         * MPI_Igather root in-place
+         */
+
+        template <typename T>
+        Request Igather(T* recvbuf, MPI_Int count) const
+        {
+            return Igather(recvbuf, count, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Igather(std::vector<T>& recvbuf) const
+        {
+            return Igather(recvbuf, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Igather(T* recvbuf, MPI_Int count, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Igather(MPI_IN_PLACE, 0, type, recvbuf, count, type, rank, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Igather(std::vector<T>& recvbuf, const Datatype& type) const
+        {
+            MPIWRAP_ASSERT(recvbuf.size()%size == 0,
+                           "Receive buffer size must be a multiple of the communicator size.");
+            return Igather(&recvbuf.front(), recvbuf.size()/size, type);
+        }
+
+        /*
+         * MPI_Igatherv non-root
+         */
+
+        template <typename T>
+        Request Igatherv(const T* sendbuf, MPI_Int sendcount, MPI_Int root) const
+        {
+            return Igatherv(sendbuf, sendcount, root, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Igatherv(const std::vector<T>& sendbuf, MPI_Int root) const
+        {
+            return Igatherv(sendbuf, root, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Igatherv(const T* sendbuf, MPI_Int sendcount, MPI_Int root, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Igatherv(sendbuf, sendcount, type, NULL, NULL, NULL, type, root, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Igatherv(const std::vector<T>& sendbuf, MPI_Int root, const Datatype& type) const
+        {
+            return Igatherv(&sendbuf.front(), sendbuf.size(), root, type);
+        }
+
+        /*
+         * MPI_Igatherv root
+         */
+
+        template <typename T>
+        Request Igather(const T* sendbuf, MPI_Int sendcount, T* recvbuf, const MPI_Int* recvcounts) const
+        {
+            return Igather(sendbuf, sendcount, recvbuf, recvcounts, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Igather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf,
+                     const std::vector<MPI_Int>& recvcounts) const
+        {
+            return Igather(sendbuf, recvbuf, recvcounts, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Igather(const T* sendbuf, MPI_Int sendcount, T* recvbuf, const MPI_Int* recvcounts,
+                     const Datatype& type) const
+        {
+            std::vector<MPI_Int> recvdispls = displacements(recvcounts);
+            return Igather(sendbuf, recvbuf, recvcounts, &recvdispls.front(), type);
+        }
+
+        template <typename T>
+        Request Igather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts,
+                     const Datatype& type) const
+        {
+            MPIWRAP_ASSERT(recvbuf.size() == sum(recvcounts),
+                           "The receive buffer size must equal the sum of the receive counts.");
+            return Igather(sendbuf, recvbuf, recvcounts, displacements(recvcounts), type);
+        }
+
+        template <typename T>
+        Request Igather(const T* sendbuf, MPI_Int sendcount, T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls) const
+        {
+            return Igather(sendbuf, sendcount, recvbuf, recvcounts, recvdispls, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Igather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf,
+                     const std::vector<MPI_Int>& recvcounts, const std::vector<MPI_Int>& recvdispls) const
+        {
+            return Igather(sendbuf, recvbuf, recvcounts, recvdispls, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Igather(const T* sendbuf, MPI_Int sendcount, T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls,
+                     const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Igatherv(sendbuf, sendcount, type, recvbuf, recvcounts, recvdispls, type, rank, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Igather(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts,
+                     const std::vector<MPI_Int>& recvdispls, const Datatype& type) const
+        {
+            MPIWRAP_ASSERT(recvcounts.size() == size,
+                           "There must be exactly one receive count for each process.");
+            MPIWRAP_ASSERT(recvdispls.size() == size,
+                           "There must be exactly one receive displacement for each process.");
+            MPIWRAP_ASSERT(recvbuf.size() >= recvdispls[size-1]+recvcounts[size-1],
+                           "The receive buffer size must be at least as large the sum of last receive count and the last receive displacement.");
+            MPIWRAP_ASSERT(sendbuf.size() == recvcounts[rank],
+                           "The send buffer size must equal the receive count for this process.");
+            return Igather(&sendbuf.front(), sendbuf.size(), &recvbuf.front(), &recvcounts.front(), &recvdispls.front(), type);
+        }
+
+        /*
+         * MPI_Igatherv root in-place
+         */
+
+        template <typename T>
+        Request Igather(T* recvbuf, const MPI_Int* recvcounts) const
+        {
+            return Igather(recvbuf, recvcounts, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Igather(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts) const
+        {
+            return Igather(recvbuf, recvcounts, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Igather(T* recvbuf, const MPI_Int* recvcounts, const Datatype& type) const
+        {
+            std::vector<MPI_Int> recvdispls = displacements(recvcounts);
+            return Igather(recvbuf, recvcounts, recvdispls, type);
+        }
+
+        template <typename T>
+        Request Igather(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, const Datatype& type) const
+        {
+            MPIWRAP_ASSERT(recvbuf.size() == sum(recvcounts),
+                           "The receive buffer size must equal the sum of the receive counts.");
+            return Igather(recvbuf, recvcounts, displacements(recvcounts), type);
+        }
+
+        template <typename T>
+        Request Igather(T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls) const
+        {
+            return Igather(recvbuf, recvcounts, recvdispls, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Igather(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, const std::vector<MPI_Int>& recvdispls) const
+        {
+            return Igather(recvbuf, recvcounts, recvdispls, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Igather(T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Igatherv(MPI_IN_PLACE, 0, type, recvbuf, recvcounts, recvdispls, type, rank, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Igather(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, const std::vector<MPI_Int>& recvdispls, const Datatype& type) const
+        {
+            MPIWRAP_ASSERT(recvcounts.size() == size,
+                           "There must be exactly one receive count for each process.");
+            MPIWRAP_ASSERT(recvdispls.size() == size,
+                           "There must be exactly one receive displacement for each process.");
+            MPIWRAP_ASSERT(recvbuf.size() >= recvdispls[size-1]+recvcounts[size-1],
+                           "The receive buffer size must be at least as large the sum of last receive count and the last receive displacement.");
+            return Igather(&recvbuf.front(), &recvcounts.front(), &recvdispls.front(), type);
+        }
+
+        /*
+         * MPI_Ireduce non-root
+         */
+
+        template <typename T>
+        Request Ireduce(const T* sendbuf, MPI_Int count, const MPI_Op& op, MPI_Int root) const
+        {
+            return Ireduce(sendbuf, count, op, root, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Ireduce(const std::vector<T>& sendbuf, const MPI_Op& op, MPI_Int root) const
+        {
+            return Ireduce(sendbuf, op, root, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Ireduce(const T* sendbuf, MPI_Int count, const MPI_Op& op, MPI_Int root, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Ireduce(sendbuf, NULL, count, type, op, root, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Ireduce(const std::vector<T>& sendbuf, const MPI_Op& op, MPI_Int root, const Datatype& type) const
+        {
+            return Ireduce(&sendbuf.front(), sendbuf.size(), op, root, type);
+        }
+
+        /*
+         * MPI_Ireduce root
+         */
+
+        template <typename T>
+        Request Ireduce(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op) const
+        {
+            return Ireduce(sendbuf, recvbuf, count, op, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Ireduce(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op) const
+        {
+            return Ireduce(sendbuf, recvbuf, op, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Ireduce(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Ireduce(sendbuf, recvbuf, count, type, op, rank, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Ireduce(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op, const Datatype& type) const
+        {
+            MPIWRAP_ASSERT(sendbuf.size() == recvbuf.size(),
+                           "Send and receive buffers must be the same size.");
+            return Ireduce(&sendbuf.front(), &recvbuf.front(), sendbuf.size(), op, type);
+        }
+
+        /*
+         * MPI_Ireduce root in-place
+         */
+
+        template <typename T>
+        Request Ireduce(T* recvbuf, MPI_Int count, const MPI_Op& op) const
+        {
+            return Ireduce(recvbuf, count, op, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Ireduce(std::vector<T>& recvbuf, const MPI_Op& op) const
+        {
+            return Ireduce(recvbuf, op, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Ireduce(T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Ireduce(MPI_IN_PLACE, recvbuf, count, type, op, rank, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Ireduce(std::vector<T>& recvbuf, const MPI_Op& op, const Datatype& type) const
+        {
+            return Ireduce(&recvbuf.front(), recvbuf.size(), op, type);
+        }
+
+        /*
+         * MPI_Ireduce_scatter in-place
+         */
+
+        template <typename T>
+        Request Ireduce_scatter(T* recvbuf, MPI_Int* recvcounts, const MPI_Op& op) const
+        {
+            return Ireduce_scatter(recvbuf, recvcounts, op, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Ireduce_scatter(std::vector<T>& recvbuf, std::vector<MPI_Int>& recvcounts, const MPI_Op& op) const
+        {
+            return Ireduce_scatter(recvbuf, recvcounts, op, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Ireduce_scatter(T* recvbuf, MPI_Int* recvcounts, const MPI_Op& op, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Ireduce_scatter(MPI_IN_PLACE, recvbuf, recvcounts, type, op, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Ireduce_scatter(std::vector<T>& recvbuf, std::vector<MPI_Int>& recvcounts, const MPI_Op& op, const Datatype& type) const
+        {
+            MPIWRAP_ASSERT(recvcounts.size() == size,
+                           "There must be exactly one receive count for each process.");
+            MPIWRAP_ASSERT(recvbuf.size() == sum(recvcounts),
+                           "The send/receive buffer size must equal the sum of the receive counts.");
+            return Ireduce_scatter(&recvbuf.front(), &recvcounts.front(), op, type);
+        }
+
+        /*
+         * MPI_Ireduce_scatter_block in-place
+         */
+
+        template <typename T>
+        Request Ireduce_scatter(T* recvbuf, MPI_Int count, const MPI_Op& op) const
+        {
+            return Ireduce_scatter(recvbuf, count, op, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Ireduce_scatter(std::vector<T>& recvbuf, const MPI_Op& op) const
+        {
+            return Ireduce_scatter(recvbuf, op, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Ireduce_scatter(T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Ireduce_scatter(MPI_IN_PLACE, recvbuf, count, type, op, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Ireduce_scatter(std::vector<T>& recvbuf, const MPI_Op& op, const Datatype& type) const
+        {
+            MPIWRAP_ASSERT(recvbuf.size()%npeers == 0, "Receive buffer size must be a multiple of the number of processes.");
+            return Ireduce_scatter(&recvbuf.front(), recvbuf.size()/npeers, op, type);
+        }
+
+        /*
+         * MPI_Scatter non-root
+         */
+
+        template <typename T>
+        Request Iscatter(T* recvbuf, MPI_Int recvcount, MPI_Int root) const
+        {
+            return Iscatter(recvbuf, recvcount, root, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iscatter(std::vector<T>& recvbuf, MPI_Int root) const
+        {
+            return Iscatter(recvbuf, root, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iscatter(T* recvbuf, MPI_Int recvcount, MPI_Int root, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Iscatter(NULL, 0, type, recvbuf, recvcount, type, root, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Iscatter(std::vector<T>& recvbuf, MPI_Int root, const Datatype& type) const
+        {
+            return Iscatter(&recvbuf.front(), recvbuf.size(), root, type);
+        }
+
+        /*
+         * MPI_Iscatter root
+         */
+
+        template <typename T>
+        Request Iscatter(const T* sendbuf, T* recvbuf, MPI_Int recvcount) const
+        {
+            return Iscatter(sendbuf, recvbuf, recvcount, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iscatter(const std::vector<T>& sendbuf, std::vector<T>& recvbuf) const
+        {
+            return Iscatter(sendbuf, recvbuf, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iscatter(const T* sendbuf, T* recvbuf, MPI_Int recvcount, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Iscatter(sendbuf, recvcount, type, recvbuf, recvcount, type, rank, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Iscatter(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const Datatype& type) const
+        {
+            MPIWRAP_ASSERT(size*recvbuf.size() == sendbuf.size(),
+                           "Send buffer size must be equal communicator size times send receive size.");
+            return Iscatter(&sendbuf.front(), &recvbuf.front(), recvbuf.size(), type);
+        }
+
+        /*
+         * MPI_Iscatter root in-place
+         */
+
+        template <typename T>
+        Request Iscatter(const T* sendbuf, MPI_Int sendcount) const
+        {
+            return Iscatter(sendbuf, sendcount, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iscatter(const std::vector<T>& sendbuf) const
+        {
+            return Iscatter(sendbuf, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iscatter(const T* sendbuf, MPI_Int count, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Iscatter(sendbuf, count, type, MPI_IN_PLACE, 0, type, rank, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Iscatter(const std::vector<T>& sendbuf, const Datatype& type) const
+        {
+            MPIWRAP_ASSERT(sendbuf.size()%size == 0,
+                           "Send buffer size must be a multiple of the communicator size.");
+            return Iscatter(&sendbuf.front(), sendbuf.size()/size, type);
+        }
+
+        /*
+         * MPI_Iscatterv non-root
+         */
+
+        template <typename T>
+        Request Iscatterv(T* recvbuf, MPI_Int recvcount, MPI_Int root) const
+        {
+            return Iscatterv(recvbuf, recvcount, root, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iscatterv(std::vector<T>& recvbuf, MPI_Int root) const
+        {
+            return Iscatterv(recvbuf, root, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iscatterv(T* recvbuf, MPI_Int recvcount, MPI_Int root, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Iscatterv(NULL, NULL, NULL, type, recvbuf, recvcount, type, root, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Iscatterv(std::vector<T>& recvbuf, MPI_Int root, const Datatype& type) const
+        {
+            return Iscatterv(&recvbuf.front(), recvbuf.size(), root, type);
+        }
+
+        /*
+         * MPI_Iscatterv root
+         */
+
+        template <typename T>
+        Request Iscatter(const T* sendbuf, const MPI_Int* sendcounts, T* recvbuf, MPI_Int recvcount) const
+        {
+            return Iscatter(sendbuf, sendcounts, recvbuf, recvcount, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iscatter(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcounts,
+                      std::vector<T>& recvbuf) const
+        {
+            return Iscatter(sendbuf, sendcounts, recvbuf, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iscatter(const T* sendbuf, const MPI_Int* sendcounts, T* recvbuf, MPI_Int recvcount,
+                      const Datatype& type) const
+        {
+            std::vector<MPI_Int> senddispls = displacements(sendcounts);
+            return Iscatter(sendbuf, sendcounts, &senddispls.front(), recvbuf, recvcount, type);
+        }
+
+        template <typename T>
+        Request Iscatter(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcounts,
+                      std::vector<T>& recvbuf, const Datatype& type) const
+        {
+            MPIWRAP_ASSERT(sendbuf.size() == sum(sendcounts),
+                           "Send buffer size must equal the sum of the send counts.");
+            return Iscatter(sendbuf, sendcounts, displacements(sendcounts), recvbuf, type);
+        }
+
+        template <typename T>
+        Request Iscatter(const T* sendbuf, const MPI_Int* sendcounts, const MPI_Int* senddispls, T* recvbuf, MPI_Int recvcount) const
+        {
+            return Iscatter(sendbuf, sendcounts, senddispls, recvbuf, recvcount, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iscatter(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcounts,
+                      const std::vector<MPI_Int>& senddispls, std::vector<T>& recvbuf) const
+        {
+            return Iscatter(sendbuf, sendcounts, senddispls, recvbuf, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iscatter(const T* sendbuf, const MPI_Int* sendcounts, const MPI_Int* senddispls, T* recvbuf, MPI_Int recvcount,
+                      const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Iscatterv(sendbuf, sendcounts, senddispls, type, recvbuf, recvcount, type, rank, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Iscatter(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcounts,
+                      const std::vector<MPI_Int>& senddispls, std::vector<T>& recvbuf, const Datatype& type) const
+        {
+            MPIWRAP_ASSERT(sendcounts.size() == size,
+                           "There must be exactly one send count for each process.");
+            MPIWRAP_ASSERT(senddispls.size() == size,
+                           "There must be exactly one send displacement for each process.");
+            MPIWRAP_ASSERT(recvbuf.size() == sendcounts[rank],
+                           "Receive buffer size must equal send count for this process.");
+            MPIWRAP_ASSERT(sendbuf.size() >= senddispls[size-1]+sendcounts[size-1],
+                           "Send buffer size must be at least the sum of the last send count and the last send displacement.");
+            return Iscatter(&sendbuf.front(), &sendcounts.front(), &senddispls.front(), &recvbuf.front(), recvbuf.size(), type);
+        }
+
+        /*
+         * MPI_Scatterv root in-place
+         */
+
+        template <typename T>
+        Request Iscatter(const T* sendbuf, const MPI_Int* sendcounts) const
+        {
+            return Iscatter(sendbuf, sendcounts, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iscatter(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcounts) const
+        {
+            return Iscatter(sendbuf, sendcounts, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iscatter(const T* sendbuf, const MPI_Int* sendcounts, const Datatype& type) const
+        {
+            std::vector<MPI_Int> senddispls = displacements(sendcounts);
+            return Iscatter(sendbuf, sendcounts, &senddispls.front(), type);
+        }
+
+        template <typename T>
+        Request Iscatter(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcounts,
+                     const Datatype& type) const
+        {
+            MPIWRAP_ASSERT(sendbuf.size() == sum(sendcounts),
+                           "Send buffer size must equal the sum of the send counts.");
+            return Iscatter(sendbuf, sendcounts, displacements(sendcounts), type);
+        }
+
+        template <typename T>
+        Request Iscatter(const T* sendbuf, const MPI_Int* sendcounts, const MPI_Int* senddispls) const
+        {
+            return Iscatter(sendbuf, sendcounts, senddispls, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iscatter(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcounts, const std::vector<MPI_Int>& senddispls) const
+        {
+            return Iscatter(sendbuf, sendcounts, senddispls, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iscatter(const T* sendbuf, const MPI_Int* sendcounts, const MPI_Int* senddispls, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Iscatterv(sendbuf, sendcounts, senddispls, type, MPI_IN_PLACE, 0, type, rank, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Iscatter(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcounts, const std::vector<MPI_Int>& senddispls,
+                      const Datatype& type) const
+        {
+            MPIWRAP_ASSERT(sendcounts.size() == size,
+                           "There must be exactly one send count for each process.");
+            MPIWRAP_ASSERT(senddispls.size() == size,
+                           "There must be exactly one send displacement for each process.");
+            MPIWRAP_ASSERT(sendbuf.size() >= senddispls[size-1]+sendcounts[size-1],
+                           "Send buffer size must be at least the sum of the last send count and the last send displacement.");
+            return Iscatter(&sendbuf.front(), &sendcounts.front(), &senddispls.front(), type);
+        }
+
+        /*
+         * MPI_IExscan
+         */
+
+        template <typename T>
+        Request IExscan(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op) const
+        {
+            return IExscan(sendbuf, recvbuf, count, op, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request IExscan(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op) const
+        {
+            return IExscan(sendbuf, recvbuf, op, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request IExscan(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Iexscan(sendbuf, recvbuf, count, type, op, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request IExscan(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op, const Datatype& type) const
+        {
+            MPIWRAP_ASSERT(sendbuf.size() == recvbuf.size(),
+                           "Send and receive buffers must be the same size.");
+            return IExscan(&sendbuf.front(), &recvbuf.begin(), sendbuf.size(), op, type);
+        }
+
+        /*
+         * MPI_IExscan in-place
+         */
+
+        template <typename T>
+        Request IExscan(T* recvbuf, MPI_Int count, const MPI_Op& op) const
+        {
+            return IExscan(recvbuf, count, op, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request IExscan(std::vector<T>& recvbuf, const MPI_Op& op) const
+        {
+            return IExscan(recvbuf, op, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request IExscan(T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Iexscan(MPI_IN_PLACE, recvbuf, count, type, op, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request IExscan(std::vector<T>& recvbuf, const MPI_Op& op, const Datatype& type) const
+        {
+            return IExscan(&recvbuf.front(), recvbuf.size(), op, type);
+        }
+
+        /*
+         * MPI_Iscan
+         */
+
+        template <typename T>
+        Request Iscan(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op) const
+        {
+            return Iscan(sendbuf, recvbuf, count, op, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iscan(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op) const
+        {
+            return Iscan(sendbuf, recvbuf, op, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iscan(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Iscan(sendbuf, recvbuf, count, type, op, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Iscan(const std::vector<T>& sendbuf, std::vector<T>& recvbuf, const MPI_Op& op, const Datatype& type) const
+        {
+            MPIWRAP_ASSERT(sendbuf.size() == recvbuf.size(),
+                           "Send and receive buffers must be the same size.");
+            return Iscan(&sendbuf.front(), &recvbuf.front(), sendbuf.size(), op, type);
+        }
+
+        /*
+         * MPI_Iscan in-place
+         */
+
+        template <typename T>
+        Request Iscan(T* recvbuf, MPI_Int count, const MPI_Op& op) const
+        {
+            return Iscan(recvbuf, count, op, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iscan(std::vector<T>& recvbuf, const MPI_Op& op) const
+        {
+            return Iscan(recvbuf, op, MPI_TYPE_<T>::value());
+        }
+
+        template <typename T>
+        Request Iscan(T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
+        {
+            Request req;
+            MPIWRAP_CALL(MPI_Iscan(MPI_IN_PLACE, recvbuf, count, type, op, comm, req));
+            return req;
+        }
+
+        template <typename T>
+        Request Iscan(std::vector<T>& recvbuf, const MPI_Op& op, const Datatype& type) const
+        {
+            return Iscan(&recvbuf.front(), recvbuf.size(), op, type);
         }
 };
 

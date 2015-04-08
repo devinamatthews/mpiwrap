@@ -277,6 +277,22 @@ class Request
                            "There must be exactly one status for each request.");
             return testSome(&reqs.front(), &stats.front(), reqs.size());
         }
+
+#if MPIWRAP_VERSION_AT_LEAST(2,0)
+        bool getStatus() const
+        {
+            MPI_Int flag;
+            MPIWRAP_CALL(MPI_Request_get_status(*this, &flag, MPI_STATUS_IGNORE));
+            return flag;
+        }
+
+        bool getStatus(Status& status) const
+        {
+            MPI_Int flag;
+            MPIWRAP_CALL(MPI_Request_get_status(*this, &flag, status));
+            return flag;
+        }
+#endif
 };
 
 }
