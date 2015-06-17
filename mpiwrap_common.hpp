@@ -8,6 +8,7 @@
 #include <cassert>
 #include <numeric>
 #include <cwchar>
+#include <stdexcept>
 
 #ifndef MPIWRAP_CPP11
 #if __cplusplus >= 201103L
@@ -43,8 +44,8 @@ typedef MPIWRAP_INT MPIWrap_Int;
 
 #define MPIWRAP_CALL(...) \
 { \
-    MPI_Int info = __VA_ARGS__; \
-    MPIWRAP_ASSERT(info == 0, "Non-zero return from MPI function."); \
+    if ((__VA_ARGS__) != 0) \
+    MPIWRAP_ASSERT(0, "Non-zero return from MPI function."); \
 }
 
 #define MPIWRAP_VERSION_AT_LEAST(major,minor) \

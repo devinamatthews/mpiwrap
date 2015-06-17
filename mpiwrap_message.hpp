@@ -22,7 +22,7 @@ class Message
     protected:
         MPI_Message msg;
 
-        Message() : msg(MPI_MESSAGE_NULL) {}
+        Message(const MPI_Message m = MPI_MESSAGE_NULL) : msg(m) {}
 
     public:
         Message(Message&& other) : msg(other.msg)

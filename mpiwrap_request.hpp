@@ -7,17 +7,35 @@
 namespace MPIWrap
 {
 
+namespace internal
+{
+    template <typename Derived> class Comm;
+}
+
 class Request
 {
     friend class Intracomm;
+    friend class Intercomm;
+    template <typename Derived> friend class internal::Comm;
 
     protected:
         MPI_Request req;
 
-    public:
-        Request() : req(MPI_REQUEST_NULL) {}
-
         explicit Request(const MPI_Request& req) : req(req) {}
+
+    public:
+        Request(Request&& other) : req(other.req)
+        {
+            other.req = MPI_REQUEST_NULL;
+        }
+
+        ~Request()
+        {
+            if (req != MPI_REQUEST_NULL)
+            {
+                MPIWRAP_CALL(MPI_Request_free(&req));
+            }
+        }
 
         operator MPI_Request&() { return req; }
 
@@ -69,11 +87,6 @@ class Request
             MPI_Int flag;
             MPIWRAP_CALL(MPI_Test(&req, &flag, status));
             return flag;
-        }
-
-        void free()
-        {
-            MPIWRAP_CALL(MPI_Request_free(&req));
         }
 
         friend Request& waitAny(Request* reqs, MPI_Int count)

@@ -572,9 +572,9 @@ class Intercomm : protected internal::Comm<Intercomm>
 
         Request Ibcast() const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Ibcast(NULL, 0, MPI_BYTE, MPI_PROC_NULL, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Ibcast(NULL, 0, MPI_BYTE, MPI_PROC_NULL, comm, &req));
+            return Request(req);
         }
 
         /*
@@ -596,9 +596,9 @@ class Intercomm : protected internal::Comm<Intercomm>
         template <typename T>
         Request Ibcast(const T* buffer, MPI_Int count, const Datatype& type) const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Ibcast(nc(buffer), count, type, MPI_ROOT, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Ibcast(nc(buffer), count, type, MPI_ROOT, comm, &req));
+            return Request(req);
         }
 
         template <typename T>
@@ -626,9 +626,9 @@ class Intercomm : protected internal::Comm<Intercomm>
         template <typename T>
         Request Ibcast(T* buffer, MPI_Int count, MPI_Int root, const Datatype& type) const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Ibcast(buffer, count, type, root, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Ibcast(buffer, count, type, root, comm, &req));
+            return Request(req);
         }
 
         template <typename T>
@@ -643,9 +643,9 @@ class Intercomm : protected internal::Comm<Intercomm>
 
         Request Igather() const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Igather(NULL, 0, MPI_BYTE, NULL, 0, MPI_BYTE, MPI_PROC_NULL, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Igather(NULL, 0, MPI_BYTE, NULL, 0, MPI_BYTE, MPI_PROC_NULL, comm, &req));
+            return Request(req);
         }
 
         /*
@@ -667,15 +667,15 @@ class Intercomm : protected internal::Comm<Intercomm>
         template <typename T>
         Request Igather(T* recvbuf, MPI_Int count, const Datatype& type) const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Igather(NULL, 0, type, recvbuf, count, type, MPI_ROOT, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Igather(NULL, 0, type, recvbuf, count, type, MPI_ROOT, comm, &req));
+            return Request(req);
         }
 
         template <typename T>
         Request Igather(std::vector<T>& recvbuf, const Datatype& type) const
         {
-            Request req;
+            MPI_Request req;
             MPIWRAP_ASSERT(recvbuf.size()%npeers == 0,
                            "Receive buffer size must be a multiple of the remote communicator size.");
             return Igather(&recvbuf.front(), recvbuf.size()/npeers, type);
@@ -700,9 +700,9 @@ class Intercomm : protected internal::Comm<Intercomm>
         template <typename T>
         Request Igather(const T* sendbuf, MPI_Int count, MPI_Int root, const Datatype& type) const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Igather(sendbuf, count, type, NULL, 0, type, root, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Igather(sendbuf, count, type, NULL, 0, type, root, comm, &req));
+            return Request(req);
         }
 
         template <typename T>
@@ -717,9 +717,9 @@ class Intercomm : protected internal::Comm<Intercomm>
 
         Request Igatherv() const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Igatherv(NULL, 0, MPI_BYTE, NULL, NULL, NULL, MPI_BYTE, MPI_PROC_NULL, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Igatherv(NULL, 0, MPI_BYTE, NULL, NULL, NULL, MPI_BYTE, MPI_PROC_NULL, comm, &req));
+            return Request(req);
         }
 
         /*
@@ -748,7 +748,7 @@ class Intercomm : protected internal::Comm<Intercomm>
         template <typename T>
         Request Igather(std::vector<T>& recvbuf, const std::vector<MPI_Int>& recvcounts, const Datatype& type) const
         {
-            Request req;
+            MPI_Request req;
             MPIWRAP_ASSERT(recvbuf.size() == sum(recvcounts),
                            "The receive buffer size must equal the sum of the receive counts.");
             return Igather(recvbuf, recvcounts, displacements(recvcounts), type);
@@ -769,9 +769,9 @@ class Intercomm : protected internal::Comm<Intercomm>
         template <typename T>
         Request Igather(T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls, const Datatype& type) const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Igatherv(NULL, 0, type, recvbuf, recvcounts, recvdispls, type, MPI_ROOT, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Igatherv(NULL, 0, type, recvbuf, recvcounts, recvdispls, type, MPI_ROOT, comm, &req));
+            return Request(req);
         }
 
         template <typename T>
@@ -806,9 +806,9 @@ class Intercomm : protected internal::Comm<Intercomm>
         template <typename T>
         Request Igatherv(const T* sendbuf, MPI_Int count, MPI_Int root, const Datatype& type) const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Igatherv(sendbuf, count, type, NULL, NULL, NULL, type, root, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Igatherv(sendbuf, count, type, NULL, NULL, NULL, type, root, comm, &req));
+            return Request(req);
         }
 
         template <typename T>
@@ -823,9 +823,9 @@ class Intercomm : protected internal::Comm<Intercomm>
 
         Request Ireduce() const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Ireduce(NULL, NULL, 0, MPI_BYTE, MPI_OP_NULL, MPI_PROC_NULL, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Ireduce(NULL, NULL, 0, MPI_BYTE, MPI_OP_NULL, MPI_PROC_NULL, comm, &req));
+            return Request(req);
         }
 
         /*
@@ -847,9 +847,9 @@ class Intercomm : protected internal::Comm<Intercomm>
         template <typename T>
         Request Ireduce(T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Ireduce(NULL, recvbuf, count, type, op, MPI_ROOT, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Ireduce(NULL, recvbuf, count, type, op, MPI_ROOT, comm, &req));
+            return Request(req);
         }
 
         template <typename T>
@@ -877,9 +877,9 @@ class Intercomm : protected internal::Comm<Intercomm>
         template <typename T>
         Request Ireduce(const T* sendbuf, MPI_Int count, const MPI_Op& op, MPI_Int root, const Datatype& type) const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Ireduce(sendbuf, NULL, count, type, op, root, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Ireduce(sendbuf, NULL, count, type, op, root, comm, &req));
+            return Request(req);
         }
 
         template <typename T>
@@ -894,9 +894,9 @@ class Intercomm : protected internal::Comm<Intercomm>
 
         Request Iscatter() const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Iscatter(NULL, 0, MPI_BYTE, NULL, 0, MPI_BYTE, MPI_PROC_NULL, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Iscatter(NULL, 0, MPI_BYTE, NULL, 0, MPI_BYTE, MPI_PROC_NULL, comm, &req));
+            return Request(req);
         }
 
         /*
@@ -918,15 +918,15 @@ class Intercomm : protected internal::Comm<Intercomm>
         template <typename T>
         Request Iscatter(const T* sendbuf, MPI_Int recvcount, const Datatype& type) const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Iscatter(sendbuf, recvcount, type, NULL, 0, type, MPI_ROOT, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Iscatter(sendbuf, recvcount, type, NULL, 0, type, MPI_ROOT, comm, &req));
+            return Request(req);
         }
 
         template <typename T>
         Request Iscatter(const std::vector<T>& sendbuf, const Datatype& type) const
         {
-            Request req;
+            MPI_Request req;
             MPIWRAP_ASSERT(sendbuf.size()%npeers != 0,
                            "Send buffer size must a multiple of the remote group size.");
             return Iscatter(&sendbuf.front(), sendbuf.size()/npeers, type);
@@ -951,9 +951,9 @@ class Intercomm : protected internal::Comm<Intercomm>
         template <typename T>
         Request Iscatter(T* recvbuf, MPI_Int recvcount, MPI_Int root, const Datatype& type) const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Iscatter(NULL, 0, type, recvbuf, recvcount, type, root, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Iscatter(NULL, 0, type, recvbuf, recvcount, type, root, comm, &req));
+            return Request(req);
         }
 
         template <typename T>
@@ -968,9 +968,9 @@ class Intercomm : protected internal::Comm<Intercomm>
 
         Request Iscatterv() const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Iscatterv(NULL, NULL, NULL, MPI_BYTE, NULL, 0, MPI_BYTE, MPI_PROC_NULL, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Iscatterv(NULL, NULL, NULL, MPI_BYTE, NULL, 0, MPI_BYTE, MPI_PROC_NULL, comm, &req));
+            return Request(req);
         }
 
         /*
@@ -1001,7 +1001,7 @@ class Intercomm : protected internal::Comm<Intercomm>
         Request Iscatter(const std::vector<T>& sendbuf, const std::vector<MPI_Int>& sendcounts,
                      const Datatype& type) const
         {
-            Request req;
+            MPI_Request req;
             MPIWRAP_ASSERT(sendbuf.size() == sum(sendcounts),
                            "Send buffer size must equal the sum of the send counts.");
             return Iscatter(sendbuf, sendcounts, displacements(sendcounts), type);
@@ -1024,9 +1024,9 @@ class Intercomm : protected internal::Comm<Intercomm>
         Request Iscatter(const T* sendbuf, const MPI_Int* sendcounts, const MPI_Int* senddispls,
                       const Datatype& type) const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Iscatterv(sendbuf, sendcounts, senddispls, type, NULL, 0, type, MPI_ROOT, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Iscatterv(sendbuf, sendcounts, senddispls, type, NULL, 0, type, MPI_ROOT, comm, &req));
+            return Request(req);
         }
 
         template <typename T>
@@ -1061,9 +1061,9 @@ class Intercomm : protected internal::Comm<Intercomm>
         template <typename T>
         Request Iscatterv(T* recvbuf, MPI_Int recvcount, MPI_Int root, const Datatype& type) const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Iscatterv(NULL, NULL, NULL, type, recvbuf, recvcount, type, root, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Iscatterv(NULL, NULL, NULL, type, recvbuf, recvcount, type, root, comm, &req));
+            return Request(req);
         }
 
         template <typename T>

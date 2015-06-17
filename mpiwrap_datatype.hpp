@@ -75,14 +75,6 @@ class Datatype
                                                               internal::is_complex<T>::value>::type* foo = NULL)
         : type(MPI_TYPE_<T>::value().type), predefined(true) {}
 
-        operator MPI_Datatype&() { return type; }
-
-        operator const MPI_Datatype&() const { return type; }
-
-        operator MPI_Datatype*() { return &type; }
-
-        operator const MPI_Datatype*() const { return &type; }
-
     public:
         Datatype(Datatype&& other)
         : type(other.type), predefined(other.predefined)
@@ -97,6 +89,14 @@ class Datatype
                 MPIWRAP_CALL(MPI_Type_free(&type));
             }
         }
+
+        operator MPI_Datatype&() { return type; }
+
+        operator const MPI_Datatype&() const { return type; }
+
+        operator MPI_Datatype*() { return &type; }
+
+        operator const MPI_Datatype*() const { return &type; }
 
         friend Datatype operator*(const Datatype& old, MPI_Int n)
         {

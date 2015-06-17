@@ -37,14 +37,6 @@ class Group
         explicit Group(const MPI_Group& group)
         : group(group), rank(getRank(group)), size(getSize(group)) {}
 
-        operator MPI_Group&() { return group; }
-
-        operator const MPI_Group&() const { return group; }
-
-        operator MPI_Group*() { return &group; }
-
-        operator const MPI_Group*() const { return &group; }
-
     public:
         struct Range
         {
@@ -68,6 +60,14 @@ class Group
                 MPIWRAP_CALL(MPI_Group_free(&group));
             }
         }
+
+        operator MPI_Group&() { return group; }
+
+        operator const MPI_Group&() const { return group; }
+
+        operator MPI_Group*() { return &group; }
+
+        operator const MPI_Group*() const { return &group; }
 
         std::vector<MPI_Int> translateRanks(const MPI_Int* ranks, MPI_Int count, const Group& other) const
         {

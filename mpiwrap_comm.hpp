@@ -4,6 +4,8 @@
 #include "mpiwrap_common.hpp"
 #include "mpiwrap_group.hpp"
 #include "mpiwrap_message.hpp"
+#include "mpiwrap_window.hpp"
+#include "mpiwrap_info.hpp"
 
 namespace MPIWrap
 {
@@ -68,6 +70,16 @@ class Comm
             other.comm = MPI_COMM_NULL;
         }
 
+        ~Comm()
+        {
+            if (comm != MPI_COMM_NULL &&
+                comm != MPI_COMM_WORLD &&
+                comm != MPI_COMM_SELF)
+            {
+                MPIWRAP_CALL(MPI_Comm_free(&comm));
+            }
+        }
+
         operator MPI_Comm&() { return comm; }
 
         operator const MPI_Comm&() const { return comm; }
@@ -111,16 +123,6 @@ class Comm
             return Derived(c);
         }
 
-        ~Comm()
-        {
-            if (comm != MPI_COMM_NULL &&
-                comm != MPI_COMM_WORLD &&
-                comm != MPI_COMM_SELF)
-            {
-                MPIWRAP_CALL(MPI_Comm_free(&comm));
-            }
-        }
-
         bool isIntercommunicator() const
         {
             MPI_Int flag;
@@ -131,6 +133,43 @@ class Comm
         bool isIntracommunicator() const
         {
             return !isIntercommunicator();
+        }
+
+        Window window(void* data, MPI_Aint size)
+        {
+            return window(data, size, Info::null());
+        }
+
+        Window window(void* data, MPI_Aint size, const Info& info)
+        {
+            MPI_Win w;
+            MPIWRAP_CALL(MPI_Win_create(data, size, 1, info, comm, &w));
+            return Window(w);
+        }
+
+        template <typename Container>
+        Window window(Container& c)
+        {
+            return window(&c[0], c.size());
+        }
+
+        template <typename Container>
+        Window window(Container& c, const Info& info)
+        {
+            return window(&c[0], c.size(), info);
+        }
+
+        Window window(MPI_Aint size)
+        {
+            return window(size, Info::null());
+        }
+
+        Window window(MPI_Aint size, const Info& info)
+        {
+            MPI_Win w;
+            void* foo;
+            MPIWRAP_CALL(MPI_Win_allocate(size, 1, info, comm, &foo, &w));
+            return Window(w);
         }
 
         //TODO: attributes

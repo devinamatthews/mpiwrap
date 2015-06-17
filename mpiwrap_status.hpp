@@ -17,6 +17,8 @@ class Status
         explicit Status(const MPI_Status& status) : status(status) {}
 
     public:
+        Status() {}
+
         operator MPI_Status&() { return status; }
 
         operator const MPI_Status&() const { return status; }
