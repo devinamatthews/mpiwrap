@@ -6,6 +6,4 @@
 .deps
 .ptp-sync
 .ptp-sync-folder
-configure
 autom4te.cache
-aclocal.m4
