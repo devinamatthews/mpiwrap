@@ -50,6 +50,23 @@ class Status
             return n;
         }
 
+#if MPIWRAP_HAVE_MPI_COUNT
+
+        template <typename T>
+        MPI_Count elements() const
+        {
+            return elements(MPI_TYPE_<T>::value());
+        }
+
+        MPI_Count elements(const MPI_Datatype& type) const
+        {
+        	MPI_Count n;
+            MPIWRAP_CALL(MPI_Get_elements_x(nc(&status), type, &n));
+            return n;
+        }
+
+#else
+
         template <typename T>
         MPI_Int elements() const
         {
@@ -62,6 +79,8 @@ class Status
             MPIWRAP_CALL(MPI_Get_elements(nc(&status), type, &n));
             return n;
         }
+
+#endif
 
         bool cancelled() const
         {

@@ -76,11 +76,26 @@ class Datatype
         : type(MPI_TYPE_<T>::value().type), predefined(true) {}
 
     public:
+#if MPIWRAP_CXX11
+
         Datatype(Datatype&& other)
         : type(other.type), predefined(other.predefined)
         {
             other.type = MPI_DATATYPE_NULL;
         }
+
+#else
+
+        Datatype(const Datatype& other)
+        : type(other.type), predefined(other.predefined)
+        {
+        	if (!predefined)
+        	{
+                MPIWRAP_CALL(MPI_Type_dup(other, *this));
+        	}
+        }
+
+#endif
 
         ~Datatype()
         {
@@ -277,6 +292,17 @@ class Datatype
             return subarray(&sizes[0], &subsizes[0], &starts[0], sizes.size(), order);
         }
 
+#if MPIWRAP_HAVE_MPI_COUNT
+
+        MPI_Count size() const
+        {
+            MPI_Count c;
+            MPIWRAP_CALL(MPI_Type_size_x(type, &c));
+            return c;
+        }
+
+#else
+
         MPI_Int size() const
         {
             MPI_Int c;
@@ -284,31 +310,65 @@ class Datatype
             return c;
         }
 
-        MPI_Aint extent() const
-        {
-            MPI_Aint lb, extent;
-            MPIWRAP_CALL(MPI_Type_get_extent(type, &lb, &extent));
-            return extent;
-        }
+#endif
 
         void extent(MPI_Aint& lb, MPI_Aint& extent) const
         {
             MPIWRAP_CALL(MPI_Type_get_extent(type, &lb, &extent));
         }
 
+#if MPIWRAP_HAVE_MPI_COUNT
+
+        void extent(MPI_Count& lb, MPI_Count& extent) const
+        {
+            MPIWRAP_CALL(MPI_Type_get_extent_x(type, &lb, &extent));
+        }
+
+        MPI_Count extent() const
+        {
+        	MPI_Count lb, extent;
+            this->extent(lb, extent);
+            return extent;
+        }
+
+        MPI_Count lb() const
+        {
+        	MPI_Count lb, extent;
+            this->extent(lb, extent);
+            return lb;
+        }
+
+        MPI_Count ub() const
+        {
+        	MPI_Count lb, extent;
+            this->extent(lb, extent);
+            return lb+extent;
+        }
+
+#else
+
+        MPI_Aint extent() const
+        {
+            MPI_Aint lb, extent;
+            this->extent(lb, extent);
+            return extent;
+        }
+
         MPI_Aint lb() const
         {
             MPI_Aint lb, extent;
-            MPIWRAP_CALL(MPI_Type_get_extent(type, &lb, &extent));
+            this->extent(lb, extent);
             return lb;
         }
 
         MPI_Aint ub() const
         {
             MPI_Aint lb, extent;
-            MPIWRAP_CALL(MPI_Type_get_extent(type, &lb, &extent));
+            this->extent(lb, extent);
             return lb+extent;
         }
+
+#endif
 
         Datatype resize(MPI_Aint lb, MPI_Aint extent) const
         {
@@ -317,31 +377,63 @@ class Datatype
             return Datatype(t);
         }
 
-        MPI_Aint true_extent() const
-        {
-            MPI_Aint lb, extent;
-            MPIWRAP_CALL(MPI_Type_get_true_extent(type, &lb, &extent));
-            return extent;
-        }
-
         void true_extent(MPI_Aint& lb, MPI_Aint& extent) const
         {
             MPIWRAP_CALL(MPI_Type_get_true_extent(type, &lb, &extent));
         }
 
+#if MPIWRAP_HAVE_MPI_COUNT
+
+        void true_extent(MPI_Count& lb, MPI_Count& extent) const
+        {
+            MPIWRAP_CALL(MPI_Type_get_true_extent_x(type, &lb, &extent));
+        }
+
+        MPI_Count true_extent() const
+        {
+        	MPI_Count lb, extent;
+            this->true_extent(lb, extent);
+            return extent;
+        }
+
+        MPI_Count true_lb() const
+        {
+        	MPI_Count lb, extent;
+            this->true_extent(lb, extent);
+            return lb;
+        }
+
+        MPI_Count true_ub() const
+        {
+        	MPI_Count lb, extent;
+            this->true_extent(lb, extent);
+            return lb+extent;
+        }
+
+#else
+
+        MPI_Aint true_extent() const
+        {
+            MPI_Aint lb, extent;
+            this->true_extent(lb, extent);
+            return extent;
+        }
+
         MPI_Aint true_lb() const
         {
             MPI_Aint lb, extent;
-            MPIWRAP_CALL(MPI_Type_get_true_extent(type, &lb, &extent));
+            this->true_extent(lb, extent);
             return lb;
         }
 
         MPI_Aint true_ub() const
         {
             MPI_Aint lb, extent;
-            MPIWRAP_CALL(MPI_Type_get_true_extent(type, &lb, &extent));
+            this->true_extent(lb, extent);
             return lb+extent;
         }
+
+#endif
 
         Datatype duplicate() const
         {
