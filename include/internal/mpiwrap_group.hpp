@@ -48,10 +48,14 @@ class Group
         const MPI_Int rank;
         const MPI_Int size;
 
+#if MPIWRAP_CXX11
+
         Group(Group&& other) : group(other.group), rank(other.rank), size(other.size)
         {
             other.group = MPI_GROUP_NULL;
         }
+
+#endif
 
         ~Group()
         {

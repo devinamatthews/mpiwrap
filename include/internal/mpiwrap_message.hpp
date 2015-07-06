@@ -25,10 +25,14 @@ class Message
         Message(const MPI_Message m = MPI_MESSAGE_NULL) : msg(m) {}
 
     public:
+#if MPIWRAP_CXX11
+
         Message(Message&& other) : msg(other.msg)
         {
             other.msg = MPI_MESSAGE_NULL;
         }
+
+#endif
 
         operator MPI_Message&() { return msg; }
 

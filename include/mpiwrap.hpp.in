@@ -3,6 +3,8 @@
 
 #define MPIWRAP_CXX11 @HAVE_CXX11@
 #define MPIWRAP_HAVE_MPI_COUNT @HAVE_MPI_COUNT@
+#define MPIWRAP_HAVE_MPI3_WIN @HAVE_MPI3_WIN@
+#define MPIWRAP_HAVE_MPI_ICOLLECTIVES @HAVE_MPI_ICOLLECTIVES@
 
 #include "internal/mpiwrap_common.hpp"
 #include "internal/mpiwrap_datatype.hpp"

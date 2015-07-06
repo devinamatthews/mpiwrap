@@ -32,6 +32,8 @@ class Window
         }
 
     public:
+#if MPIWRAP_CXX11
+
         Window(Window&& other)
         : win(other.win), size_(other.size_), data_(other.data_)
         {
@@ -39,6 +41,8 @@ class Window
             other.size_ = 0;
             other.data_ = NULL;
         }
+
+#endif
 
         ~Window()
         {
@@ -99,44 +103,9 @@ class Window
             MPIWRAP_CALL(MPI_Win_lock(lock_type, rank, assertion, win));
         }
 
-        void lock(MPI_Int assertion = 0) const
-        {
-            MPIWRAP_CALL(MPI_Win_lock_all(assertion, win));
-        }
-
         void unlock(MPI_Int rank) const
         {
             MPIWRAP_CALL(MPI_Win_unlock(rank, win));
-        }
-
-        void unlock() const
-        {
-            MPIWRAP_CALL(MPI_Win_unlock_all(win));
-        }
-
-        void flush(MPI_Int rank) const
-        {
-            MPIWRAP_CALL(MPI_Win_flush(rank, win));
-        }
-
-        void flush() const
-        {
-            MPIWRAP_CALL(MPI_Win_flush_all(win));
-        }
-
-        void flush_local(MPI_Int rank) const
-        {
-            MPIWRAP_CALL(MPI_Win_flush_local(rank, win));
-        }
-
-        void flush_local() const
-        {
-            MPIWRAP_CALL(MPI_Win_flush_local_all(win));
-        }
-
-        void sync() const
-        {
-            MPIWRAP_CALL(MPI_Win_sync(win));
         }
 
         template <typename T>
@@ -211,6 +180,43 @@ class Window
             Accumulate(&buffer[0], buffer.size(), rank, offset, op, type);
         }
 
+#if MPIWRAP_VERSION_AT_LEAST(3,0)
+
+        void lock(MPI_Int assertion = 0) const
+        {
+            MPIWRAP_CALL(MPI_Win_lock_all(assertion, win));
+        }
+
+        void unlock() const
+        {
+            MPIWRAP_CALL(MPI_Win_unlock_all(win));
+        }
+
+        void flush(MPI_Int rank) const
+        {
+            MPIWRAP_CALL(MPI_Win_flush(rank, win));
+        }
+
+        void flush() const
+        {
+            MPIWRAP_CALL(MPI_Win_flush_all(win));
+        }
+
+        void flush_local(MPI_Int rank) const
+        {
+            MPIWRAP_CALL(MPI_Win_flush_local(rank, win));
+        }
+
+        void flush_local() const
+        {
+            MPIWRAP_CALL(MPI_Win_flush_local_all(win));
+        }
+
+        void sync() const
+        {
+            MPIWRAP_CALL(MPI_Win_sync(win));
+        }
+
         template <typename T>
         void Get_accumulate(const T* put, T* get, MPI_Int count, MPI_Int rank, MPI_Aint offset, const MPI_Op& op) const
         {
@@ -258,6 +264,8 @@ class Window
         /*
          * TODO: Rput, etc.
          */
+
+#endif
 };
 
 }

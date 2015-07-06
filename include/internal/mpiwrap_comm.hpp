@@ -7,6 +7,8 @@
 #include "mpiwrap_window.hpp"
 #include "mpiwrap_info.hpp"
 
+#include <limits>
+
 namespace MPIWrap
 {
 
@@ -43,7 +45,15 @@ class Comm
         std::vector<MPI_Int> displacements(const MPI_Int* counts) const
         {
             std::vector<MPI_Int> displs(size);
-            std::partial_sum(counts, counts+size-1, displs.begin()+1);
+            for (int i = 1;i < size;i++)
+            {
+                if (displs[i-1] > std::numeric_limits<MPI_Int>::max()-counts[i-1])
+                {
+                    printf("displacement %d too large\n", i);
+                    abort();
+                }
+                displs[i] = displs[i-1]+counts[i-1];
+            }
             return displs;
         }
 
@@ -64,11 +74,15 @@ class Comm
         const MPI_Int rank;
         const MPI_Int size;
 
+#if MPIWRAP_CXX11
+
         Comm(Comm&& other)
         : comm(other.comm), npeers(other.npeers), rank(other.rank), size(other.size)
         {
             other.comm = MPI_COMM_NULL;
         }
+
+#endif
 
         ~Comm()
         {
@@ -159,6 +173,8 @@ class Comm
             return window(&c[0], c.size(), info);
         }
 
+#if MPIWRAP_VERSION_AT_LEAST(3,0)
+
         Window window(MPI_Aint size)
         {
             return window(size, Info::null());
@@ -171,6 +187,8 @@ class Comm
             MPIWRAP_CALL(MPI_Win_allocate(size, 1, info, comm, &foo, &w));
             return Window(w);
         }
+
+#endif
 
         //TODO: attributes
 
@@ -1164,6 +1182,8 @@ class Comm
             Reduce_scatter(&sendbuf.front(), &recvbuf.front(), recvbuf.size(), op, type);
         }
 
+#if MPIWRAP_HAVE_MPI_ICOLLECTIVES
+
         /*
          * MPI_Iallgather
          */
@@ -1507,6 +1527,8 @@ class Comm
                            "The send buffer must equal the receive buffer size times the number of processes.");
             return Ireduce_scatter(&sendbuf.front(), &recvbuf.front(), recvbuf.size(), op, type);
         }
+
+#endif
 };
 
 }

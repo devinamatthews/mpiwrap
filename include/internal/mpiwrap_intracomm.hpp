@@ -23,7 +23,11 @@ class Intracomm : protected internal::Comm<Intracomm>
         }
 
     public:
+#if MPIWRAP_CXX11
+
         Intracomm(Intracomm&& other) : internal::Comm<Intracomm>(std::move(other)) {}
+
+#endif
 
         using internal::Comm<Intracomm>::rank;
         using internal::Comm<Intracomm>::size;
@@ -59,15 +63,20 @@ class Intracomm : protected internal::Comm<Intracomm>
         using internal::Comm<Intracomm>::Alltoall;
         using internal::Comm<Intracomm>::Barrier;
         using internal::Comm<Intracomm>::Reduce_scatter;
+        using internal::Comm<Intracomm>::operator MPI_Comm&;
+        using internal::Comm<Intracomm>::operator const MPI_Comm&;
+        using internal::Comm<Intracomm>::operator MPI_Comm*;
+        using internal::Comm<Intracomm>::operator const MPI_Comm*;
+
+#if MPIWRAP_HAVE_MPI_ICOLLECTIVES
+
         using internal::Comm<Intracomm>::Iallgather;
         using internal::Comm<Intracomm>::Iallreduce;
         using internal::Comm<Intracomm>::Ialltoall;
         using internal::Comm<Intracomm>::Ibarrier;
         using internal::Comm<Intracomm>::Ireduce_scatter;
-        using internal::Comm<Intracomm>::operator MPI_Comm&;
-        using internal::Comm<Intracomm>::operator const MPI_Comm&;
-        using internal::Comm<Intracomm>::operator MPI_Comm*;
-        using internal::Comm<Intracomm>::operator const MPI_Comm*;
+
+#endif
 
         /*
          * OpenMPI 1.7.2 doesn't seem to support this.
@@ -1125,6 +1134,8 @@ class Intracomm : protected internal::Comm<Intracomm>
         {
             Scan(&recvbuf.front(), recvbuf.size(), op, type);
         }
+
+#if MPIWRAP_HAVE_MPI_ICOLLECTIVES
 
         /*
          * MPI_Iallgather in-place
@@ -2213,6 +2224,8 @@ class Intracomm : protected internal::Comm<Intracomm>
         {
             return Iscan(&recvbuf.front(), recvbuf.size(), op, type);
         }
+
+#endif
 };
 
 }

@@ -34,8 +34,12 @@ class Intercomm : protected internal::Comm<Intercomm>
     public:
         const MPI_Int remoteSize;
 
+#if MPIWRAP_CXX11
+
         Intercomm(Intercomm&& other)
         : internal::Comm<Intercomm>(std::move(other)), remoteSize(other.remoteSize) {}
+
+#endif
 
         using internal::Comm<Intercomm>::rank;
         using internal::Comm<Intercomm>::size;
@@ -71,15 +75,20 @@ class Intercomm : protected internal::Comm<Intercomm>
         using internal::Comm<Intercomm>::Alltoall;
         using internal::Comm<Intercomm>::Barrier;
         using internal::Comm<Intercomm>::Reduce_scatter;
+        using internal::Comm<Intercomm>::operator MPI_Comm&;
+        using internal::Comm<Intercomm>::operator const MPI_Comm&;
+        using internal::Comm<Intercomm>::operator MPI_Comm*;
+        using internal::Comm<Intercomm>::operator const MPI_Comm*;
+
+#if MPIWRAP_HAVE_MPI_ICOLLECTIVES
+
         using internal::Comm<Intercomm>::Iallgather;
         using internal::Comm<Intercomm>::Iallreduce;
         using internal::Comm<Intercomm>::Ialltoall;
         using internal::Comm<Intercomm>::Ibarrier;
         using internal::Comm<Intercomm>::Ireduce_scatter;
-        using internal::Comm<Intercomm>::operator MPI_Comm&;
-        using internal::Comm<Intercomm>::operator const MPI_Comm&;
-        using internal::Comm<Intercomm>::operator MPI_Comm*;
-        using internal::Comm<Intercomm>::operator const MPI_Comm*;
+
+#endif
 
         Group remoteGroup() const
         {
@@ -565,6 +574,8 @@ class Intercomm : protected internal::Comm<Intercomm>
         {
             Scatterv(&recvbuf.front(), recvbuf.size(), root, type);
         }
+
+#if MPIWRAP_HAVE_MPI_ICOLLECTIVES
 
         /*
          * MPI_Ibcast group A non-root
@@ -1071,6 +1082,8 @@ class Intercomm : protected internal::Comm<Intercomm>
         {
             return Iscatterv(&recvbuf.front(), recvbuf.size(), root, type);
         }
+
+#endif
 };
 
 inline Intercomm Intracomm::intercomm(MPI_Int leader) const

@@ -10,15 +10,7 @@
 #include <cwchar>
 #include <stdexcept>
 
-#ifndef MPIWRAP_CPP11
-#if __cplusplus >= 201103L
-#define MPIWRAP_CPP11 1
-#else
-#define MPIWRAP_CPP11 0
-#endif
-#endif
-
-#if MPIWRAP_CPP11
+#if MPIWRAP_CXX11
 #include <type_traits>
 #define MPIWRAP_CONSTEXPR constexpr
 #else
@@ -60,12 +52,24 @@ namespace MPIWrap
         return const_cast<T*>(x);
     }
 
+#if MPIWRAP_CXX11
+
     template <typename T>
     typename std::enable_if<!std::is_pointer<typename std::remove_reference<T>::type>::value,T&&>::type
     nc(const T&& x)
     {
         return const_cast<T&&>(x);
     }
+
+#else
+
+    template <typename T>
+    T& nc(const T& x)
+    {
+        return const_cast<T&>(x);
+    }
+
+#endif
 
     enum Collective
     {
@@ -114,5 +118,9 @@ namespace MPIWrap
         return *ub-NUM_COLLECTIVES;
     }
 }
+
+#if !MPIWRAP_VERSION_AT_LEAST(2,1)
+#error "An MPI implementation of at least MPI 2.1 must be available."
+#endif
 
 #endif

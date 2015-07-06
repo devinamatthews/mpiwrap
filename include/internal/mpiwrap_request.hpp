@@ -24,10 +24,14 @@ class Request
         explicit Request(const MPI_Request& req) : req(req) {}
 
     public:
+#if MPIWRAP_CXX11
+
         Request(Request&& other) : req(other.req)
         {
             other.req = MPI_REQUEST_NULL;
         }
+
+#endif
 
         ~Request()
         {

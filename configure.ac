@@ -19,6 +19,49 @@ AS_IF([test "x$enable_c__11" != "xno"],
 AC_CHECK_TYPE([MPI_Count], [HAVE_MPI_COUNT=1], [HAVE_MPI_COUNT=0], [[#include "mpi.h"]])
 AC_SUBST([HAVE_MPI_COUNT])
 
+HAVE_MPI3_WIN=1
+AC_CHECK_FUNCS([MPI_Compare_and_swap \
+                MPI_Fetch_and_op \
+                MPI_Get_accumulate \
+                MPI_Raccumulate \
+                MPI_Rget \
+                MPI_Rget_accumulate \
+                MPI_Rput \
+                MPI_Win_allocate \
+                MPI_Win_allocate_shared \
+                MPI_Win_attach \
+                MPI_Win_create_dynamic \
+                MPI_Win_detach \
+                MPI_Win_flush \
+                MPI_Win_flush_all \
+                MPI_Win_flush_local \
+                MPI_Win_flush_local_all \
+                MPI_Win_get_info \
+                MPI_Win_lock_all \
+                MPI_Win_set_info \
+                MPI_Win_shared_query \
+                MPI_Win_sync \
+                MPI_Win_unlock_all], [], [HAVE_MPI3_WIN=0])
+AC_SUBST([HAVE_MPI3_WIN])
+
+HAVE_MPI_ICOLLECTIVES=1
+AC_CHECK_FUNCS([MPI_Iallgather \
+                MPI_Iallgatherv \
+                MPI_Iallreduce \
+                MPI_Ialltoall \
+                MPI_Ialltoallv \
+                MPI_Ialltoallw \
+                MPI_Ibarrier \
+                MPI_Iexscan \
+                MPI_Igather \
+                MPI_Igatherv \
+                MPI_Ireduce \
+                MPI_Ireduce_scatter \
+                MPI_Ireduce_scatter_block \
+                MPI_Iscatter \
+                MPI_Iscatterv], [], [HAVE_MPI_ICOLLECTIVES=0])
+AC_SUBST([HAVE_MPI_ICOLLECTIVES])
+
 AC_CONFIG_FILES([
 include/mpiwrap.hpp
 include/internal/mpiwrap_common.hpp:include/internal/mpiwrap_common.hpp

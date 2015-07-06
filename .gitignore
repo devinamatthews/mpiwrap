@@ -7,3 +7,7 @@
 .ptp-sync
 .ptp-sync-folder
 autom4te.cache
+.settings
+config.log
+config.status
+include/mpiwrap.hpp

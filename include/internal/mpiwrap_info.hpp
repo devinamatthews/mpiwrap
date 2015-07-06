@@ -67,11 +67,15 @@ class Info
             MPIWRAP_CALL(MPI_Info_create(&info));
         }
 
+#if MPIWRAP_CXX11
+
         Info(Info&& other)
         : info(other.info)
         {
             other.info = MPI_INFO_NULL;
         }
+
+#endif
 
         ~Info()
         {
