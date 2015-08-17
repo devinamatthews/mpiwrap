@@ -443,10 +443,20 @@ class Datatype
         }
 };
 
+#if MPIWRAP_CXX11
+
 template <typename... T> struct MPI_TYPE_;
+
+#else
+
+template <typename T> struct MPI_TYPE_;
+
+#endif
 
 namespace internal
 {
+    #if MPIWRAP_CXX11
+
     template <typename T, typename... Ts>
     struct get_types
     {
@@ -457,6 +467,20 @@ namespace internal
         }
     };
 
+    #else
+
+    template <typename T, typename U=void>
+    struct get_types
+    {
+        get_types(std::vector<Datatype>& types)
+        {
+            types.push_back(MPI_TYPE_<T>::value());
+            types.push_back(MPI_TYPE_<U>::value());
+        }
+    };
+
+    #endif
+
     template <typename T> struct get_types<T>
     {
         get_types(std::vector<Datatype>& types)
@@ -466,17 +490,6 @@ namespace internal
     };
 }
 
-template <typename... T>
-struct MPI_TYPE_
-{
-    static Datatype value()
-    {
-        std::vector<Datatype> types;
-        internal::get_types<T...> getter(types);
-        return Datatype::structure(types);
-    }
-};
-
 template <typename T, typename U>
 struct MPI_TYPE_<std::pair<T,U>>
 {
@@ -484,6 +497,19 @@ struct MPI_TYPE_<std::pair<T,U>>
     {
         std::vector<Datatype> types;
         internal::get_types<T,U> getter(types);
+        return Datatype::structure(types);
+    }
+};
+
+#if MPIWRAP_CXX11
+
+template <typename... T>
+struct MPI_TYPE_
+{
+    static Datatype value()
+    {
+        std::vector<Datatype> types;
+        internal::get_types<T...> getter(types);
         return Datatype::structure(types);
     }
 };
@@ -498,6 +524,8 @@ struct MPI_TYPE_<std::tuple<T...>>
         return Datatype::structure(types);
     }
 };
+
+#endif
 
 template <>
 struct MPI_TYPE_<float>

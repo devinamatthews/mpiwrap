@@ -12,6 +12,7 @@
 
 #if MPIWRAP_CXX11
 #include <type_traits>
+#include <tuple>
 #define MPIWRAP_CONSTEXPR constexpr
 #else
 #define MPIWRAP_CONSTEXPR const
