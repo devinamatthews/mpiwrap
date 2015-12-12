@@ -44,14 +44,12 @@ class Intracomm : protected internal::Comm<Intracomm>
         using internal::Comm<Intracomm>::Send_init;
         using internal::Comm<Intracomm>::Sendrecv;
         using internal::Comm<Intracomm>::Ssend_init;
-        using internal::Comm<Intracomm>::Mprobe;
         using internal::Comm<Intracomm>::Probe;
         using internal::Comm<Intracomm>::Recv;
         using internal::Comm<Intracomm>::Bsend;
         using internal::Comm<Intracomm>::Rsend;
         using internal::Comm<Intracomm>::Send;
         using internal::Comm<Intracomm>::Ssend;
-        using internal::Comm<Intracomm>::Improbe;
         using internal::Comm<Intracomm>::Iprobe;
         using internal::Comm<Intracomm>::Irecv;
         using internal::Comm<Intracomm>::Ibsend;
@@ -67,6 +65,13 @@ class Intracomm : protected internal::Comm<Intracomm>
         using internal::Comm<Intracomm>::operator const MPI_Comm&;
         using internal::Comm<Intracomm>::operator MPI_Comm*;
         using internal::Comm<Intracomm>::operator const MPI_Comm*;
+
+#if MPIWRAP_HAVE_MPI_MESSAGE
+
+        using internal::Comm<Intracomm>::Mprobe;
+        using internal::Comm<Intracomm>::Improbe;
+
+#endif
 
 #if MPIWRAP_HAVE_MPI_ICOLLECTIVES
 
