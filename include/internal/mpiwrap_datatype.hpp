@@ -208,6 +208,8 @@ class Datatype
             return indexed(&displs[0], displs.size());
         }
 
+#if MPIWRAP_HAVE_MPI_TYPE_CREATE_HINDEXED_BLOCK
+
         Datatype hindexed(const MPI_Aint* bdispls, MPI_Int nblock) const
         {
             MPI_Datatype t;
@@ -219,6 +221,8 @@ class Datatype
         {
             return hindexed(&bdispls[0], bdispls.size());
         }
+
+#endif
 
         static Datatype structure(const MPI_Int* counts, const MPI_Aint* bdispls,
                                   const Datatype* types, MPI_Int nelem)

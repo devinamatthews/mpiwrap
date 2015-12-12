@@ -69,6 +69,10 @@ AC_CHECK_FUNCS([MPI_Mprobe \
                 MPI_Imrecv], [], [HAVE_MPI_MESSAGE=0])
 AC_SUBST([HAVE_MPI_MESSAGE])
 
+HAVE_MPI_TYPE_CREATE_HINDEXED_BLOCK=1
+AC_CHECK_FUNCS([MPI_Type_create_hindexed_block], [], [HAVE_MPI_TYPE_CREATE_HINDEXED_BLOCK=0])
+AC_SUBST([HAVE_MPI_TYPE_CREATE_HINDEXED_BLOCK])
+
 AC_CONFIG_FILES([
 include/mpiwrap.hpp
 include/internal/mpiwrap_common.hpp:include/internal/mpiwrap_common.hpp

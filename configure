@@ -586,6 +586,7 @@ PACKAGE_URL='http://www.github.com/devinamatthews/mpiwrap'
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+HAVE_MPI_TYPE_CREATE_HINDEXED_BLOCK
 HAVE_MPI_MESSAGE
 HAVE_MPI_ICOLLECTIVES
 HAVE_MPI_WIN
@@ -2944,6 +2945,22 @@ _ACEOF
 
 else
   HAVE_MPI_MESSAGE=0
+fi
+done
+
+
+
+HAVE_MPI_TYPE_CREATE_HINDEXED_BLOCK=1
+for ac_func in MPI_Type_create_hindexed_block
+do :
+  ac_fn_cxx_check_func "$LINENO" "MPI_Type_create_hindexed_block" "ac_cv_func_MPI_Type_create_hindexed_block"
+if test "x$ac_cv_func_MPI_Type_create_hindexed_block" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_MPI_TYPE_CREATE_HINDEXED_BLOCK 1
+_ACEOF
+
+else
+  HAVE_MPI_TYPE_CREATE_HINDEXED_BLOCK=0
 fi
 done
 
