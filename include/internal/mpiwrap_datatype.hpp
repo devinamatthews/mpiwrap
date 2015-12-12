@@ -184,6 +184,8 @@ class Datatype
             return indexed(count, &displs[0], displs.size());
         }
 
+#if MPIWRAP_HAVE_MPI_TYPE_CREATE_HINDEXED_BLOCK
+
         Datatype hindexed(MPI_Int count, const MPI_Aint* bdispls, MPI_Int nblock) const
         {
             MPI_Datatype t;
@@ -195,6 +197,8 @@ class Datatype
         {
             return hindexed(count, &bdispls[0], bdispls.size());
         }
+
+#endif
 
         Datatype indexed(const MPI_Int* displs, MPI_Int nblock) const
         {
