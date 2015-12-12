@@ -19,7 +19,7 @@ AS_IF([test "x$enable_c__11" != "xno"],
 AC_CHECK_TYPE([MPI_Count], [HAVE_MPI_COUNT=1], [HAVE_MPI_COUNT=0], [[#include "mpi.h"]])
 AC_SUBST([HAVE_MPI_COUNT])
 
-HAVE_MPI3_WIN=1
+HAVE_MPI_WIN=1
 AC_CHECK_FUNCS([MPI_Compare_and_swap \
                 MPI_Fetch_and_op \
                 MPI_Get_accumulate \
@@ -41,8 +41,8 @@ AC_CHECK_FUNCS([MPI_Compare_and_swap \
                 MPI_Win_set_info \
                 MPI_Win_shared_query \
                 MPI_Win_sync \
-                MPI_Win_unlock_all], [], [HAVE_MPI3_WIN=0])
-AC_SUBST([HAVE_MPI3_WIN])
+                MPI_Win_unlock_all], [], [HAVE_MPI_WIN=0])
+AC_SUBST([HAVE_MPI_WIN])
 
 HAVE_MPI_ICOLLECTIVES=1
 AC_CHECK_FUNCS([MPI_Iallgather \
@@ -61,6 +61,13 @@ AC_CHECK_FUNCS([MPI_Iallgather \
                 MPI_Iscatter \
                 MPI_Iscatterv], [], [HAVE_MPI_ICOLLECTIVES=0])
 AC_SUBST([HAVE_MPI_ICOLLECTIVES])
+
+HAVE_MPI_MESSAGE=1
+AC_CHECK_FUNCS([MPI_Mprobe \
+                MPI_Improbe \
+                MPI_Mrecv \
+                MPI_Imrecv], [], [HAVE_MPI_MESSAGE=0])
+AC_SUBST([HAVE_MPI_MESSAGE])
 
 AC_CONFIG_FILES([
 include/mpiwrap.hpp

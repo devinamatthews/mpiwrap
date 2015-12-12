@@ -586,8 +586,9 @@ PACKAGE_URL='http://www.github.com/devinamatthews/mpiwrap'
 
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+HAVE_MPI_MESSAGE
 HAVE_MPI_ICOLLECTIVES
-HAVE_MPI3_WIN
+HAVE_MPI_WIN
 HAVE_MPI_COUNT
 HAVE_CXX11
 OBJEXT
@@ -2859,7 +2860,7 @@ fi
 
 
 
-HAVE_MPI3_WIN=1
+HAVE_MPI_WIN=1
 for ac_func in MPI_Compare_and_swap \
                 MPI_Fetch_and_op \
                 MPI_Get_accumulate \
@@ -2891,7 +2892,7 @@ if eval test \"x\$"$as_ac_var"\" = x"yes"; then :
 _ACEOF
 
 else
-  HAVE_MPI3_WIN=0
+  HAVE_MPI_WIN=0
 fi
 done
 
@@ -2923,6 +2924,26 @@ _ACEOF
 
 else
   HAVE_MPI_ICOLLECTIVES=0
+fi
+done
+
+
+
+HAVE_MPI_MESSAGE=1
+for ac_func in MPI_Mprobe \
+                MPI_Improbe \
+                MPI_Mrecv \
+                MPI_Imrecv
+do :
+  as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
+ac_fn_cxx_check_func "$LINENO" "$ac_func" "$as_ac_var"
+if eval test \"x\$"$as_ac_var"\" = x"yes"; then :
+  cat >>confdefs.h <<_ACEOF
+#define `$as_echo "HAVE_$ac_func" | $as_tr_cpp` 1
+_ACEOF
+
+else
+  HAVE_MPI_MESSAGE=0
 fi
 done
 

@@ -149,6 +149,8 @@ class Comm
             return !isIntercommunicator();
         }
 
+#if MPIWRAP_HAVE_MPI_WIN
+
         Window window(void* data, MPI_Aint size)
         {
             return window(data, size, Info::null());
@@ -173,8 +175,6 @@ class Comm
             return window(&c[0], c.size(), info);
         }
 
-#if MPIWRAP_VERSION_AT_LEAST(3,0)
-
         Window window(MPI_Aint size)
         {
             return window(size, Info::null());
@@ -191,6 +191,8 @@ class Comm
 #endif
 
         //TODO: attributes
+
+#if MPIWRAP_HAVE_MPI_MESSAGE
 
         /*
          * MPI_Mprobe
@@ -209,6 +211,8 @@ class Comm
             MPIWRAP_CALL(MPI_Mprobe(source, tag, comm, m, MPI_STATUS_IGNORE));
             return m;
         }
+
+#endif
 
         /*
          * MPI_Probe
@@ -664,6 +668,9 @@ class Comm
             return Ssend_init(&buf.front(), buf.size(), dest, tag, type);
         }
 
+
+#if MPIWRAP_HAVE_MPI_MESSAGE
+
         /*
          * MPI_Improbe
          */
@@ -685,6 +692,8 @@ class Comm
             if (flag) return m;
             else return Message();
         }
+
+#endif
 
         /*
          * MPI_Iprobe

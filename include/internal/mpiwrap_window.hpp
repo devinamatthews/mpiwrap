@@ -1,6 +1,8 @@
 #ifndef _MPIWRAP_WINDOW_HPP_
 #define _MPIWRAP_WINDOW_HPP_
 
+#if MPIWRAP_HAVE_MPI_WIN
+
 #include "mpiwrap_common.hpp"
 #include "mpiwrap_info.hpp"
 
@@ -269,5 +271,7 @@ class Window
 };
 
 }
+
+#endif
 
 #endif

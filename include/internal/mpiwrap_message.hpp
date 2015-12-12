@@ -1,6 +1,8 @@
 #ifndef _MPIWRAP_MESSAGE_HPP_
 #define _MPIWRAP_MESSAGE_HPP_
 
+#if MPIWRAP_HAVE_MPI_MESSAGE
+
 #include "mpiwrap_common.hpp"
 #include "mpiwrap_datatype.hpp"
 
@@ -128,5 +130,7 @@ class Message
 };
 
 }
+
+#endif
 
 #endif
