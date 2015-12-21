@@ -80,8 +80,8 @@ class Intercomm : protected internal::Comm<Intercomm>
 
 #if MPIWRAP_HAVE_MPI_MESSAGE
 
-        using internal::Comm<Intracomm>::Mprobe;
-        using internal::Comm<Intracomm>::Improbe;
+        using internal::Comm<Intercomm>::Mprobe;
+        using internal::Comm<Intercomm>::Improbe;
 
 #endif
 
