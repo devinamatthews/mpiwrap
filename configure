@@ -2966,7 +2966,7 @@ done
 
 
 
-ac_config_files="$ac_config_files include/mpiwrap.hpp include/internal/mpiwrap_common.hpp:include/internal/mpiwrap_common.hpp include/internal/mpiwrap_datatype.hpp:include/internal/mpiwrap_datatype.hpp include/internal/mpiwrap_status.hpp:include/internal/mpiwrap_status.hpp include/internal/mpiwrap_request.hpp:include/internal/mpiwrap_request.hpp include/internal/mpiwrap_comm.hpp:include/internal/mpiwrap_comm.hpp include/internal/mpiwrap_intracomm.hpp:include/internal/mpiwrap_intracomm.hpp include/internal/mpiwrap_intercomm.hpp:include/internal/mpiwrap_intercomm.hpp"
+ac_config_files="$ac_config_files include/mpiwrap.hpp include/internal/mpiwrap_buffer.hpp:include/internal/mpiwrap_buffer.hpp include/internal/mpiwrap_comm.hpp:include/internal/mpiwrap_comm.hpp include/internal/mpiwrap_common.hpp:include/internal/mpiwrap_common.hpp include/internal/mpiwrap_datatype.hpp:include/internal/mpiwrap_datatype.hpp include/internal/mpiwrap_group.hpp:include/internal/mpiwrap_group.hpp include/internal/mpiwrap_info.hpp:include/internal/mpiwrap_info.hpp include/internal/mpiwrap_intercomm.hpp:include/internal/mpiwrap_intercomm.hpp include/internal/mpiwrap_intracomm.hpp:include/internal/mpiwrap_intracomm.hpp include/internal/mpiwrap_message.hpp:include/internal/mpiwrap_message.hpp include/internal/mpiwrap_request.hpp:include/internal/mpiwrap_request.hpp include/internal/mpiwrap_status.hpp:include/internal/mpiwrap_status.hpp include/internal/mpiwrap_window.hpp:include/internal/mpiwrap_window.hpp"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -3675,13 +3675,18 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "include/mpiwrap.hpp") CONFIG_FILES="$CONFIG_FILES include/mpiwrap.hpp" ;;
+    "include/internal/mpiwrap_buffer.hpp") CONFIG_FILES="$CONFIG_FILES include/internal/mpiwrap_buffer.hpp:include/internal/mpiwrap_buffer.hpp" ;;
+    "include/internal/mpiwrap_comm.hpp") CONFIG_FILES="$CONFIG_FILES include/internal/mpiwrap_comm.hpp:include/internal/mpiwrap_comm.hpp" ;;
     "include/internal/mpiwrap_common.hpp") CONFIG_FILES="$CONFIG_FILES include/internal/mpiwrap_common.hpp:include/internal/mpiwrap_common.hpp" ;;
     "include/internal/mpiwrap_datatype.hpp") CONFIG_FILES="$CONFIG_FILES include/internal/mpiwrap_datatype.hpp:include/internal/mpiwrap_datatype.hpp" ;;
-    "include/internal/mpiwrap_status.hpp") CONFIG_FILES="$CONFIG_FILES include/internal/mpiwrap_status.hpp:include/internal/mpiwrap_status.hpp" ;;
-    "include/internal/mpiwrap_request.hpp") CONFIG_FILES="$CONFIG_FILES include/internal/mpiwrap_request.hpp:include/internal/mpiwrap_request.hpp" ;;
-    "include/internal/mpiwrap_comm.hpp") CONFIG_FILES="$CONFIG_FILES include/internal/mpiwrap_comm.hpp:include/internal/mpiwrap_comm.hpp" ;;
-    "include/internal/mpiwrap_intracomm.hpp") CONFIG_FILES="$CONFIG_FILES include/internal/mpiwrap_intracomm.hpp:include/internal/mpiwrap_intracomm.hpp" ;;
+    "include/internal/mpiwrap_group.hpp") CONFIG_FILES="$CONFIG_FILES include/internal/mpiwrap_group.hpp:include/internal/mpiwrap_group.hpp" ;;
+    "include/internal/mpiwrap_info.hpp") CONFIG_FILES="$CONFIG_FILES include/internal/mpiwrap_info.hpp:include/internal/mpiwrap_info.hpp" ;;
     "include/internal/mpiwrap_intercomm.hpp") CONFIG_FILES="$CONFIG_FILES include/internal/mpiwrap_intercomm.hpp:include/internal/mpiwrap_intercomm.hpp" ;;
+    "include/internal/mpiwrap_intracomm.hpp") CONFIG_FILES="$CONFIG_FILES include/internal/mpiwrap_intracomm.hpp:include/internal/mpiwrap_intracomm.hpp" ;;
+    "include/internal/mpiwrap_message.hpp") CONFIG_FILES="$CONFIG_FILES include/internal/mpiwrap_message.hpp:include/internal/mpiwrap_message.hpp" ;;
+    "include/internal/mpiwrap_request.hpp") CONFIG_FILES="$CONFIG_FILES include/internal/mpiwrap_request.hpp:include/internal/mpiwrap_request.hpp" ;;
+    "include/internal/mpiwrap_status.hpp") CONFIG_FILES="$CONFIG_FILES include/internal/mpiwrap_status.hpp:include/internal/mpiwrap_status.hpp" ;;
+    "include/internal/mpiwrap_window.hpp") CONFIG_FILES="$CONFIG_FILES include/internal/mpiwrap_window.hpp:include/internal/mpiwrap_window.hpp" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

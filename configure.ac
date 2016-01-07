@@ -75,12 +75,17 @@ AC_SUBST([HAVE_MPI_TYPE_CREATE_HINDEXED_BLOCK])
 
 AC_CONFIG_FILES([
 include/mpiwrap.hpp
+include/internal/mpiwrap_buffer.hpp:include/internal/mpiwrap_buffer.hpp
+include/internal/mpiwrap_comm.hpp:include/internal/mpiwrap_comm.hpp
 include/internal/mpiwrap_common.hpp:include/internal/mpiwrap_common.hpp
 include/internal/mpiwrap_datatype.hpp:include/internal/mpiwrap_datatype.hpp
-include/internal/mpiwrap_status.hpp:include/internal/mpiwrap_status.hpp
-include/internal/mpiwrap_request.hpp:include/internal/mpiwrap_request.hpp
-include/internal/mpiwrap_comm.hpp:include/internal/mpiwrap_comm.hpp
-include/internal/mpiwrap_intracomm.hpp:include/internal/mpiwrap_intracomm.hpp
+include/internal/mpiwrap_group.hpp:include/internal/mpiwrap_group.hpp
+include/internal/mpiwrap_info.hpp:include/internal/mpiwrap_info.hpp
 include/internal/mpiwrap_intercomm.hpp:include/internal/mpiwrap_intercomm.hpp
+include/internal/mpiwrap_intracomm.hpp:include/internal/mpiwrap_intracomm.hpp
+include/internal/mpiwrap_message.hpp:include/internal/mpiwrap_message.hpp
+include/internal/mpiwrap_request.hpp:include/internal/mpiwrap_request.hpp
+include/internal/mpiwrap_status.hpp:include/internal/mpiwrap_status.hpp
+include/internal/mpiwrap_window.hpp:include/internal/mpiwrap_window.hpp
 ])
 AC_OUTPUT
