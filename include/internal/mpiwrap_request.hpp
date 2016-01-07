@@ -16,6 +16,7 @@ class Request
 {
     friend class Intracomm;
     friend class Intercomm;
+    friend class Message;
     template <typename Derived> friend class internal::Comm;
 
     protected:
