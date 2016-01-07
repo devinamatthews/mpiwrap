@@ -299,9 +299,9 @@ class Comm
         template <typename T>
         Request Recv_init(T* buf, MPI_Int count, MPI_Int source, MPI_Int tag, const Datatype& type) const
         {
-            Request req;
+            MPI_Request req;
             MPIWRAP_CALL(MPI_Recv_init(buf, count, type, source, tag, comm, &req));
-            return req;
+            return Request(req);
         }
 
         template <typename T>
@@ -357,9 +357,9 @@ class Comm
         template <typename T>
         Request Bsend_init(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
         {
-            Request req;
+            MPI_Request req;
             MPIWRAP_CALL(MPI_Bsend_init(buf, count, type, dest, tag, comm, &req));
-            return req;
+            return Request(req);
         }
 
         template <typename T>
@@ -415,9 +415,9 @@ class Comm
         template <typename T>
         Request Rsend_init(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
         {
-            Request req;
+            MPI_Request req;
             MPIWRAP_CALL(MPI_Rsend_init(buf, count, type, dest, tag, comm, &req));
-            return req;
+            return Request(req);
         }
 
         template <typename T>
@@ -473,9 +473,9 @@ class Comm
         template <typename T>
         Request Send_init(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
         {
-            Request req;
+            MPI_Request req;
             MPIWRAP_CALL(MPI_Send_init(buf, count, type, dest, tag, comm, &req));
-            return req;
+            return Request(req);
         }
 
         template <typename T>
@@ -657,9 +657,9 @@ class Comm
         template <typename T>
         Request Ssend_init(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
         {
-            Request req;
+            MPI_Request req;
             MPIWRAP_CALL(MPI_Ssend_init(buf, count, type, dest, tag, comm, &req));
-            return req;
+            return Request(req);
         }
 
         template <typename T>
@@ -732,9 +732,9 @@ class Comm
         template <typename T>
         Request Irecv(T* buf, MPI_Int count, MPI_Int source, MPI_Int tag, const Datatype& type) const
         {
-            Request req;
+            MPI_Request req;
             MPIWRAP_CALL(MPI_Irecv(buf, count, type, source, tag, comm, &req));
-            return req;
+            return Request(req);
         }
 
         template <typename T>
@@ -762,9 +762,9 @@ class Comm
         template <typename T>
         Request Ibsend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
         {
-            Request req;
+            MPI_Request req;
             MPIWRAP_CALL(MPI_Ibsend(buf, count, type, dest, tag, comm, &req));
-            return req;
+            return Request(req);
         }
 
         template <typename T>
@@ -792,9 +792,9 @@ class Comm
         template <typename T>
         Request Irsend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
         {
-            Request req;
+            MPI_Request req;
             MPIWRAP_CALL(MPI_Irsend(buf, count, type, dest, tag, comm, &req));
-            return req;
+            return Request(req);
         }
 
         template <typename T>
@@ -822,9 +822,9 @@ class Comm
         template <typename T>
         Request Isend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
         {
-            Request req;
+            MPI_Request req;
             MPIWRAP_CALL(MPI_Isend(buf, count, type, dest, tag, comm, &req));
-            return req;
+            return Request(req);
         }
 
         template <typename T>
@@ -852,9 +852,9 @@ class Comm
         template <typename T>
         Request Issend(const T* buf, MPI_Int count, MPI_Int dest, MPI_Int tag, const Datatype& type) const
         {
-            Request req;
+            MPI_Request req;
             MPIWRAP_CALL(MPI_Issend(buf, count, type, dest, tag, comm, &req));
-            return req;
+            return Request(req);
         }
 
         template <typename T>
@@ -1212,9 +1212,9 @@ class Comm
         template <typename T>
         Request Iallgather(const T* sendbuf, T* recvbuf, MPI_Int count, const Datatype& type) const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Iallgather(nc(sendbuf), count, type, recvbuf, count, type, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Iallgather(nc(sendbuf), count, type, recvbuf, count, type, comm, &req));
+            return Request(req);
         }
 
         template <typename T>
@@ -1276,9 +1276,9 @@ class Comm
         Request Iallgather(const T* sendbuf, MPI_Int sendcount, T* recvbuf, const MPI_Int* recvcounts,
                        const MPI_Int* recvdispls, const Datatype& type) const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Iallgatherv(nc(sendbuf), sendcount, type, recvbuf, nc(recvcounts), nc(recvdispls), type, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Iallgatherv(nc(sendbuf), sendcount, type, recvbuf, nc(recvcounts), nc(recvdispls), type, comm, &req));
+            return Request(req);
         }
 
         template <typename T>
@@ -1313,9 +1313,9 @@ class Comm
         template <typename T>
         Request Iallreduce(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Iallreduce(nc(sendbuf), recvbuf, count, type, op, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Iallreduce(nc(sendbuf), recvbuf, count, type, op, comm, &req));
+            return Request(req);
         }
 
         template <typename T>
@@ -1346,9 +1346,9 @@ class Comm
         template <typename T>
         Request Ialltoall(const T* sendbuf, T* recvbuf, MPI_Int count, const Datatype& type) const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Ialltoall(nc(sendbuf), count, type, recvbuf, count, type, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Ialltoall(nc(sendbuf), count, type, recvbuf, count, type, comm, &req));
+            return Request(req);
         }
 
         template <typename T>
@@ -1421,10 +1421,10 @@ class Comm
         Request Ialltoall(const T* sendbuf, const MPI_Int* sendcounts, const MPI_Int* senddispls,
                                 T* recvbuf, const MPI_Int* recvcounts, const MPI_Int* recvdispls, const Datatype& type) const
         {
-            Request req;
+            MPI_Request req;
             MPIWRAP_CALL(MPI_Ialltoallv(nc(sendbuf), nc(sendcounts), nc(senddispls), type,
-                                           recvbuf , nc(recvcounts), nc(recvdispls), type, comm, req));
-            return req;
+                                           recvbuf , nc(recvcounts), nc(recvdispls), type, comm, &req));
+            return Request(req);
         }
 
         template <typename T>
@@ -1460,9 +1460,9 @@ class Comm
 
         Request Ibarrier() const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Ibarrier(comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Ibarrier(comm, &req));
+            return Request(req);
         }
 
         /*
@@ -1485,9 +1485,9 @@ class Comm
         template <typename T>
         Request Ireduce_scatter(const T* sendbuf, T* recvbuf, const MPI_Int* recvcounts, const MPI_Op& op, const Datatype& type) const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Ireduce_scatter(nc(sendbuf), recvbuf, nc(recvcounts), type, op, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Ireduce_scatter(nc(sendbuf), recvbuf, nc(recvcounts), type, op, comm, &req));
+            return Request(req);
         }
 
         template <typename T>
@@ -1523,9 +1523,9 @@ class Comm
         template <typename T>
         Request Ireduce_scatter(const T* sendbuf, T* recvbuf, MPI_Int count, const MPI_Op& op, const Datatype& type) const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Ireduce_scatter_block(nc(sendbuf), recvbuf, count, type, op, comm, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Ireduce_scatter_block(nc(sendbuf), recvbuf, count, type, op, comm, &req));
+            return Request(req);
         }
 
         template <typename T>

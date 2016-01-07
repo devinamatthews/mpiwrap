@@ -117,9 +117,9 @@ class Message
         template <typename T>
         Request Irecv(T* buf, MPI_Int count, const Datatype& type) const
         {
-            Request req;
-            MPIWRAP_CALL(MPI_Imrecv(buf, count, type, msg, req));
-            return req;
+            MPI_Request req;
+            MPIWRAP_CALL(MPI_Imrecv(buf, count, type, msg, &req));
+            return Request(req);
         }
 
         template <typename T>
